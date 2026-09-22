@@ -50,12 +50,19 @@ export function GlucoseChart({ width, readings, events, therapy, health }: Props
     ? { from: healthIndex(therapy.targetHigh), to: healthIndex(therapy.targetLow) }
     : { from: therapy.targetLow, to: therapy.targetHigh };
 
+  // Below target: red. Within 5% above it (near-hypo): orange. Only meaningful
+  // in raw mg/dL — the health index inverts low/high, so it keeps the flat accent colour.
+  const nearLowCutoff = therapy.targetLow * 1.05;
+  const colorForValue = health
+    ? undefined
+    : (v: number) => (v < therapy.targetLow ? colors.red : v < nearLowCutoff ? colors.orange : colors.primary);
+
   return (
     <LineChart
       width={width}
       height={180}
       padLeft={PAD_L}
-      series={[{ values: data.values, color: colors.primary, width: 3, smooth: true, areaFill: true }]}
+      series={[{ values: data.values, color: colors.primary, width: 3, smooth: true, areaFill: true, colorForValue }]}
       band={band}
       yMin={health ? 0 : 40}
       yMax={health ? 100 : 300}

@@ -156,24 +156,25 @@ export default function HomeScreen() {
           <Text style={styles.cardTitle}>{health ? t.home.currentHealth : t.home.currentGlucose}</Text>
           {latest ? (
             <>
-              <View style={styles.valueRow}>
-                <View style={styles.valueGroup}>
-                  <Text style={[styles.value, { color: statusColor }]}>{health ? healthIndex(latest.value) : toDisplayUnit(latest.value, unit)}</Text>
-                  <Text style={styles.unit}>{health ? '%' : unit}</Text>
-                  <Ionicons name={TREND_ICON[latest.trend]} size={40} color={statusColor} style={styles.trendIcon} />
+              <View style={styles.glucoseTopRow}>
+                <View style={styles.glucoseInfo}>
+                  <View style={styles.valueRow}>
+                    <Text style={[styles.value, { color: statusColor }]}>{health ? healthIndex(latest.value) : toDisplayUnit(latest.value, unit)}</Text>
+                    <Text style={styles.unit}>{health ? '%' : unit}</Text>
+                    <Ionicons name={TREND_ICON[latest.trend]} size={30} color={statusColor} style={styles.trendIcon} />
+                  </View>
+                  <Text style={[styles.status, { color: statusColor }]}>
+                    {status === 'inRange' ? t.home.inRange : status === 'low' ? t.home.low : t.home.high}
+                  </Text>
+                  <Text style={styles.meta}>
+                    {t.home.lastReading} {formatTime(latest.timestamp)}
+                  </Text>
                 </View>
-                {status === 'inRange' ? (
-                  <ActionButton icon="medkit" label={t.home.findHospital} color={colors.primary} onPress={() => void onFindHospital()} />
-                ) : status === 'low' ? (
-                  <ActionButton icon="warning" label={t.home.sendAlert} color={colors.red} onPress={() => void onSendAlert()} />
-                ) : null}
+                <View style={styles.actionColumn}>
+                  <ActionBox icon="medkit" label={t.home.findHospital} color={colors.primary} onPress={() => void onFindHospital()} />
+                  <ActionBox icon="warning" label={t.home.sendAlert} color={colors.red} onPress={() => void onSendAlert()} />
+                </View>
               </View>
-              <Text style={[styles.status, { color: statusColor }]}>
-                {status === 'inRange' ? t.home.inRange : status === 'low' ? t.home.low : t.home.high}
-              </Text>
-              <Text style={styles.meta}>
-                {t.home.lastReading} {formatTime(latest.timestamp)}
-              </Text>
               {notice ? <Text style={styles.notice}>{notice}</Text> : null}
             </>
           ) : (
@@ -192,20 +193,18 @@ export default function HomeScreen() {
   );
 }
 
-interface ActionButtonProps {
+interface ActionBoxProps {
   icon: IconName;
   label: string;
   color: string;
   onPress: () => void;
 }
 
-function ActionButton({ icon, label, color, onPress }: ActionButtonProps) {
+function ActionBox({ icon, label, color, onPress }: ActionBoxProps) {
   return (
-    <Pressable onPress={onPress} style={styles.actionButton} hitSlop={6}>
-      <View style={[styles.actionCircle, { borderColor: color }]}>
-        <Ionicons name={icon} size={20} color={color} />
-      </View>
-      <Text style={[styles.actionLabel, { color }]} numberOfLines={1}>
+    <Pressable onPress={onPress} style={[styles.actionBox, { borderColor: color }]} hitSlop={4}>
+      <Ionicons name={icon} size={20} color={color} />
+      <Text style={[styles.actionBoxLabel, { color }]} numberOfLines={2}>
         {label}
       </Text>
     </Pressable>
@@ -242,16 +241,26 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   cardTitle: { ...fonts.footnote, color: colors.textSecondary, textTransform: 'uppercase' },
-  valueRow: { flexDirection: 'row', alignItems: 'flex-end', marginTop: spacing.sm },
-  valueGroup: { flexDirection: 'row', alignItems: 'flex-end' },
-  value: { fontSize: 56, fontWeight: '700', lineHeight: 60 },
-  unit: { ...fonts.body, color: colors.textSecondary, marginLeft: spacing.sm, marginBottom: 8 },
-  trendIcon: { marginLeft: spacing.md, marginBottom: 8 },
+  glucoseTopRow: { flexDirection: 'row', marginTop: spacing.sm },
+  glucoseInfo: { flex: 1, paddingRight: spacing.md },
+  valueRow: { flexDirection: 'row', alignItems: 'flex-end' },
+  value: { fontSize: 44, fontWeight: '700', lineHeight: 48 },
+  unit: { ...fonts.footnote, color: colors.textSecondary, marginLeft: spacing.xs, marginBottom: 6 },
+  trendIcon: { marginLeft: spacing.sm, marginBottom: 4 },
   status: { ...fonts.body, fontWeight: '600', marginTop: spacing.xs },
   meta: { ...fonts.footnote, color: colors.textSecondary, marginTop: spacing.xs },
   notice: { ...fonts.footnote, color: colors.green, marginTop: spacing.sm, fontWeight: '600' },
   empty: { ...fonts.body, color: colors.textSecondary, marginTop: spacing.sm },
-  actionButton: { alignItems: 'center', marginLeft: 'auto', marginBottom: 6 },
-  actionCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { ...fonts.caption, fontWeight: '600', marginTop: 4 },
+  actionColumn: { width: 96, justifyContent: 'space-between', gap: spacing.sm },
+  actionBox: {
+    flex: 1,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: 4,
+  },
+  actionBoxLabel: { fontSize: 10.5, lineHeight: 13, fontWeight: '700', marginTop: 4, textAlign: 'center' },
 });

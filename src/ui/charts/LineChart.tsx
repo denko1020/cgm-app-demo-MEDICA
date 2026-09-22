@@ -11,6 +11,8 @@ export interface LineSeries {
   smooth?: boolean;
   /** Fill the area under this series with a fade-to-transparent gradient */
   areaFill?: boolean;
+  /** Colour each point-to-point segment by its value instead of a flat `color` (e.g. red when low) */
+  colorForValue?: (value: number) => string;
 }
 
 export interface ChartMarker {
@@ -95,6 +97,19 @@ export function LineChart({
     }
     return d;
   };
+  /** One tiny straight segment per point pair, each stroked by its own value-based colour. */
+  const toColoredSegments = (values: number[], colorForValue: (value: number) => string) => {
+    const segments: { d: string; color: string }[] = [];
+    for (let i = 0; i < values.length - 1; i += 1) {
+      const v0 = values[i];
+      const v1 = values[i + 1];
+      segments.push({
+        d: `M${x(i).toFixed(1)},${y(v0).toFixed(1)} L${x(i + 1).toFixed(1)},${y(v1).toFixed(1)}`,
+        color: colorForValue((v0 + v1) / 2),
+      });
+    }
+    return segments;
+  };
   const areaUnderPath = (values: number[], linePath: string) => {
     const baseY = padT + plotH;
     return `${linePath} L${x(values.length - 1).toFixed(1)},${baseY.toFixed(1)} L${x(0).toFixed(1)},${baseY.toFixed(1)} Z`;
@@ -142,33 +157,32 @@ export function LineChart({
       <Line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.separator} strokeWidth={1} />
       <Line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.separator} strokeWidth={1} />
       {series.map((s, idx) => {
+        if (!s.areaFill) return null;
+        const linePath = s.smooth ? toSmoothPath(s.values) : toPath(s.values);
+        return (
+          <Path key={`area${idx}`} d={areaUnderPath(s.values, linePath)} stroke="none" fill={`url(#chartArea${idx})`} />
+        );
+      })}
+      {series.map((s, idx) => {
+        if (s.colorForValue) {
+          return toColoredSegments(s.values, s.colorForValue).map((seg, i) => (
+            <Path key={`seg-${idx}-${i}`} d={seg.d} stroke={seg.color} strokeWidth={s.width ?? 2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          ));
+        }
         const linePath = s.smooth ? toSmoothPath(s.values) : toPath(s.values);
         return (
           <Path
             key={idx}
-            d={s.areaFill ? areaUnderPath(s.values, linePath) : linePath}
-            stroke={s.areaFill ? 'none' : s.color}
+            d={linePath}
+            stroke={s.color}
             strokeWidth={s.width ?? 2}
             strokeDasharray={s.dashed ? '4 3' : undefined}
-            fill={s.areaFill ? `url(#chartArea${idx})` : 'none'}
+            fill="none"
             strokeLinejoin="round"
             strokeLinecap="round"
           />
         );
       })}
-      {series.map((s, idx) =>
-        s.areaFill ? (
-          <Path
-            key={`line${idx}`}
-            d={s.smooth ? toSmoothPath(s.values) : toPath(s.values)}
-            stroke={s.color}
-            strokeWidth={s.width ?? 2}
-            fill="none"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        ) : null,
-      )}
       {markers.map((m, i) => (
         <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? colors.orange} strokeWidth={1} strokeDasharray="3 2" />
       ))}
