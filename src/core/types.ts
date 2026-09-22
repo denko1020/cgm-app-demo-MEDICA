@@ -66,6 +66,11 @@ export interface UserProfile {
   gender: Gender;
 }
 
+export interface EmergencyContact {
+  name: string;
+  phone: string;
+}
+
 export type SimulatorScenario = 'normal' | 'meal' | 'hypo' | 'hyper';
 
 /** One aggregated activity window from the ActivityTransport (steps + duration). */

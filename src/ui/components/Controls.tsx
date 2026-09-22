@@ -39,7 +39,9 @@ export function Segmented<T extends string | number>({ options, value, onChange 
         const active = o.value === value;
         return (
           <Pressable key={String(o.value)} onPress={() => onChange(o.value)} style={[styles.segment, active && styles.segmentActive]}>
-            <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{o.label}</Text>
+            <Text style={[styles.segmentText, active && styles.segmentTextActive]} numberOfLines={1}>
+              {o.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -78,8 +80,17 @@ function round(v: number): number {
 }
 
 const styles = StyleSheet.create({
-  segmented: { flexDirection: 'row', backgroundColor: colors.surfaceAlt, borderRadius: radius.pill, padding: 3 },
-  segment: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, minWidth: 48, alignItems: 'center' },
+  segmented: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    padding: 3,
+    gap: 4,
+    maxWidth: 220,
+  },
+  segment: { flexShrink: 0, paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, minWidth: 48, alignItems: 'center' },
   segmentActive: { backgroundColor: colors.primary },
   segmentText: { ...fonts.footnote, color: colors.textSecondary },
   segmentTextActive: { color: '#FFFFFF', fontWeight: '700' },

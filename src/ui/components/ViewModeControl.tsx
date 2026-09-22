@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,8 +25,12 @@ const ICONS: Record<ViewMode, IconName> = {
 export function ViewModeControl() {
   const t = useStrings();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const viewMode = useAppStore((s) => s.viewMode);
   const setViewMode = useAppStore((s) => s.setViewMode);
+
+  // Home only: the mode it controls (Home's card/chart) isn't shown on the other tabs.
+  if (pathname !== '/') return null;
 
   const options: { value: ViewMode; label: string }[] = [
     { value: 'glucose', label: t.mode.glucose },

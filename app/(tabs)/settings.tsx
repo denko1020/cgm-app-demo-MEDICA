@@ -90,7 +90,7 @@ export default function SettingsScreen() {
       </Section>
 
       <Section title={t.settings.profileSection}>
-        <ProfileNameRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
+        <TextRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
         <Row
           label={t.settings.profileAge}
           right={<Stepper value={s.profile.age} step={1} min={1} max={120} onChange={(v) => s.setProfile({ age: v })} />}
@@ -108,6 +108,21 @@ export default function SettingsScreen() {
           last
           right={<Segmented options={genderOptions} value={s.profile.gender} onChange={(gender) => s.setProfile({ gender })} />}
         />
+      </Section>
+
+      <Section title={t.settings.emergencyContacts} footer={t.settings.emergencyFixed}>
+        {s.emergencyContacts.map((c, i) => (
+          <View key={i}>
+            <TextRow label={`${t.settings.contact} ${i + 1} — ${t.settings.contactName}`} value={c.name} onCommit={(name) => s.setEmergencyContact(i, { name })} />
+            <TextRow
+              label={`${t.settings.contact} ${i + 1} — ${t.settings.contactPhone}`}
+              value={c.phone}
+              onCommit={(phone) => s.setEmergencyContact(i, { phone })}
+              keyboardType="phone-pad"
+              last={i === s.emergencyContacts.length - 1}
+            />
+          </View>
+        ))}
       </Section>
 
       <Section title={t.settings.therapy}>
@@ -157,21 +172,34 @@ export default function SettingsScreen() {
   );
 }
 
-interface ProfileNameRowProps {
+interface TextRowProps {
   label: string;
   value: string;
-  onCommit: (name: string) => void;
+  onCommit: (value: string) => void;
+  keyboardType?: 'default' | 'phone-pad';
+  last?: boolean;
 }
 
-function ProfileNameRow({ label, value, onCommit }: ProfileNameRowProps) {
+function TextRow({ label, value, onCommit, keyboardType = 'default', last }: TextRowProps) {
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
-  const commit = () => {
-    const trimmed = text.trim();
-    if (trimmed) onCommit(trimmed);
-    else setText(value);
-  };
-  return <Row label={label} right={<TextInput value={text} onChangeText={setText} onBlur={commit} onSubmitEditing={commit} style={styles.nameInput} />} />;
+  const commit = () => onCommit(text.trim());
+  return (
+    <Row
+      label={label}
+      last={last}
+      right={
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          onBlur={commit}
+          onSubmitEditing={commit}
+          keyboardType={keyboardType}
+          style={styles.nameInput}
+        />
+      }
+    />
+  );
 }
 
 const styles = StyleSheet.create({

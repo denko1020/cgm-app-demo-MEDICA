@@ -8,6 +8,7 @@ import type {
   ConnectionState,
   DeviceInfo,
   DiscoveredDevice,
+  EmergencyContact,
   GlucoseReading,
   GlucoseUnit,
   Hba1cUnit,
@@ -43,6 +44,7 @@ export interface AppState {
   simulator: SimulatorOptions;
   autoUpload: boolean;
   profile: UserProfile;
+  emergencyContacts: EmergencyContact[];
 
   devices: PairedDevice[];
   activeDeviceId: string | null;
@@ -68,6 +70,7 @@ export interface AppState {
   setSimulator(patch: Partial<SimulatorOptions>): void;
   setAutoUpload(enabled: boolean): void;
   setProfile(patch: Partial<UserProfile>): void;
+  setEmergencyContact(index: number, patch: Partial<EmergencyContact>): void;
 
   setScanning(scanning: boolean): void;
   addDiscovered(device: DiscoveredDevice): void;
@@ -100,6 +103,10 @@ const INITIAL = {
   simulator: { intervalSec: 10, scenario: 'normal', timeScale: 1, paused: false } as SimulatorOptions,
   autoUpload: true,
   profile: { name: 'Alex Kim', age: 42, weightKg: 72, heightCm: 172, gender: 'other' } as UserProfile,
+  emergencyContacts: [
+    { name: 'Jamie Kim', phone: '010-1234-5678' },
+    { name: 'Sam Park', phone: '010-2345-6789' },
+  ] as EmergencyContact[],
 
   devices: [] as PairedDevice[],
   activeDeviceId: null as string | null,
@@ -138,6 +145,8 @@ export const useAppStore = create<AppState>()(
       setUnit: (unit) => set({ unit }),
       setHba1cUnit: (hba1cUnit) => set({ hba1cUnit }),
       setProfile: (patch) => set((s) => ({ profile: { ...s.profile, ...patch } })),
+      setEmergencyContact: (index, patch) =>
+        set((s) => ({ emergencyContacts: s.emergencyContacts.map((c, i) => (i === index ? { ...c, ...patch } : c)) })),
       setTherapy: (patch) => set({ therapy: { ...get().therapy, ...patch } }),
       setSimulator: (patch) =>
         set((s) => {
@@ -244,6 +253,7 @@ export const useAppStore = create<AppState>()(
           simulator: { ...current.simulator, ...p.simulator },
           therapy: { ...current.therapy, ...p.therapy },
           profile: { ...current.profile, ...p.profile },
+          emergencyContacts: p.emergencyContacts ?? current.emergencyContacts,
         };
       },
       partialize: (s) => ({
@@ -255,6 +265,7 @@ export const useAppStore = create<AppState>()(
         simulator: s.simulator,
         autoUpload: s.autoUpload,
         profile: s.profile,
+        emergencyContacts: s.emergencyContacts,
         devices: s.devices,
         activeDeviceId: s.activeDeviceId,
         readings: s.readings,

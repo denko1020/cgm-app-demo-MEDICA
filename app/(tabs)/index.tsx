@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { useStrings } from '@/core/i18n';
 import { simClock } from '@/core/sim/simClock';
@@ -8,6 +8,8 @@ import { selectActiveDevice, selectLatestCgm, selectPendingUploads, useAppStore 
 import type { Trend } from '@/core/types';
 import { formatTime, healthIndex, toDisplayUnit } from '@/core/util/format';
 import { formatHba1c } from '@/core/util/hba1c';
+import { formatCoords, getLocation, hospitalSearchUrl } from '@/core/util/location';
+import { useConfirm } from '@/ui/components/Confirm';
 import { GlucoseChart } from '@/ui/components/GlucoseChart';
 import { Screen } from '@/ui/components/Screen';
 import { StatusIndicator } from '@/ui/components/StatusIndicator';
@@ -33,6 +35,7 @@ function batteryColor(level: number): string {
 
 export default function HomeScreen() {
   const t = useStrings();
+  const confirm = useConfirm();
   const { width } = useWindowDimensions();
   const connection = useAppStore((s) => s.connection);
   const lastReadingAt = useAppStore((s) => s.lastReadingAt);
@@ -44,9 +47,11 @@ export default function HomeScreen() {
   const hba1cUnit = useAppStore((s) => s.hba1cUnit);
   const viewMode = useAppStore((s) => s.viewMode);
   const profile = useAppStore((s) => s.profile);
+  const emergencyContacts = useAppStore((s) => s.emergencyContacts);
   const therapy = useAppStore((s) => s.therapy);
   const readings = useAppStore((s) => s.readings);
   const events = useAppStore((s) => s.events);
+  const [notice, setNotice] = useState<string | null>(null);
   // Derived arrays must be memoised: a selector returning a fresh array re-renders forever.
   const cgm = useMemo(() => readings.filter((r) => r.source === 'cgm'), [readings]);
 
@@ -75,6 +80,35 @@ export default function HomeScreen() {
   const avgCgm = cgm.length ? cgm.reduce((sum, r) => sum + r.value, 0) / cgm.length : null;
 
   const chartWidth = Math.min(width, 430) - spacing.lg * 2;
+
+  const onFindHospital = async () => {
+    const loc = await getLocation();
+    void Linking.openURL(hospitalSearchUrl(loc));
+  };
+
+  // Simulated send: no SMS/voice backend is wired up, so this only shows what
+  // would go out and who to. Wiring a real dispatch needs a server-side
+  // messaging integration (e.g. Twilio) which this front-end demo doesn't have.
+  const onSendAlert = async () => {
+    if (!latest) return;
+    const loc = await getLocation();
+    const locText = loc ? formatCoords(loc) : t.home.locationUnavailable;
+    const recipients = [...emergencyContacts.filter((c) => c.name.trim() && c.phone.trim()), { name: t.settings.emergencyFixed, phone: '119' }];
+    const body = [
+      `${t.home.alertName}: ${profile.name}`,
+      `${t.home.alertAge}: ${profile.age}`,
+      `${t.home.alertGender}: ${genderLabel}`,
+      `${t.home.alertLocation}: ${locText}`,
+      `${t.home.alertGlucose}: ${toDisplayUnit(latest.value, unit)} ${unit}`,
+      '',
+      `${t.home.alertRecipients}: ${recipients.map((r) => r.name).join(', ')}`,
+    ].join('\n');
+    const ok = await confirm(t.home.alertConfirmTitle, body, true);
+    if (ok) {
+      setNotice(t.home.alertSent.replace('{n}', String(recipients.length)));
+      setTimeout(() => setNotice(null), 6000);
+    }
+  };
 
   return (
     <Screen>
@@ -123,9 +157,16 @@ export default function HomeScreen() {
           {latest ? (
             <>
               <View style={styles.valueRow}>
-                <Text style={[styles.value, { color: statusColor }]}>{health ? healthIndex(latest.value) : toDisplayUnit(latest.value, unit)}</Text>
-                <Text style={styles.unit}>{health ? '%' : unit}</Text>
-                <Ionicons name={TREND_ICON[latest.trend]} size={40} color={statusColor} style={styles.trendIcon} />
+                <View style={styles.valueGroup}>
+                  <Text style={[styles.value, { color: statusColor }]}>{health ? healthIndex(latest.value) : toDisplayUnit(latest.value, unit)}</Text>
+                  <Text style={styles.unit}>{health ? '%' : unit}</Text>
+                  <Ionicons name={TREND_ICON[latest.trend]} size={40} color={statusColor} style={styles.trendIcon} />
+                </View>
+                {status === 'inRange' ? (
+                  <ActionButton icon="medkit" label={t.home.findHospital} color={colors.primary} onPress={() => void onFindHospital()} />
+                ) : status === 'low' ? (
+                  <ActionButton icon="warning" label={t.home.sendAlert} color={colors.red} onPress={() => void onSendAlert()} />
+                ) : null}
               </View>
               <Text style={[styles.status, { color: statusColor }]}>
                 {status === 'inRange' ? t.home.inRange : status === 'low' ? t.home.low : t.home.high}
@@ -133,6 +174,7 @@ export default function HomeScreen() {
               <Text style={styles.meta}>
                 {t.home.lastReading} {formatTime(latest.timestamp)}
               </Text>
+              {notice ? <Text style={styles.notice}>{notice}</Text> : null}
             </>
           ) : (
             <Text style={styles.empty}>{t.home.noData}</Text>
@@ -147,6 +189,26 @@ export default function HomeScreen() {
         </View>
       ) : null}
     </Screen>
+  );
+}
+
+interface ActionButtonProps {
+  icon: IconName;
+  label: string;
+  color: string;
+  onPress: () => void;
+}
+
+function ActionButton({ icon, label, color, onPress }: ActionButtonProps) {
+  return (
+    <Pressable onPress={onPress} style={styles.actionButton} hitSlop={6}>
+      <View style={[styles.actionCircle, { borderColor: color }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <Text style={[styles.actionLabel, { color }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -181,10 +243,15 @@ const styles = StyleSheet.create({
   },
   cardTitle: { ...fonts.footnote, color: colors.textSecondary, textTransform: 'uppercase' },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end', marginTop: spacing.sm },
+  valueGroup: { flexDirection: 'row', alignItems: 'flex-end' },
   value: { fontSize: 56, fontWeight: '700', lineHeight: 60 },
   unit: { ...fonts.body, color: colors.textSecondary, marginLeft: spacing.sm, marginBottom: 8 },
   trendIcon: { marginLeft: spacing.md, marginBottom: 8 },
   status: { ...fonts.body, fontWeight: '600', marginTop: spacing.xs },
   meta: { ...fonts.footnote, color: colors.textSecondary, marginTop: spacing.xs },
+  notice: { ...fonts.footnote, color: colors.green, marginTop: spacing.sm, fontWeight: '600' },
   empty: { ...fonts.body, color: colors.textSecondary, marginTop: spacing.sm },
+  actionButton: { alignItems: 'center', marginLeft: 'auto', marginBottom: 6 },
+  actionCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  actionLabel: { ...fonts.caption, fontWeight: '600', marginTop: 4 },
 });
