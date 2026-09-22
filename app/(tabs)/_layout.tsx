@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { useStrings } from '@/core/i18n';
 import { SimSpeedControl } from '@/ui/components/SimSpeedControl';
 import { ViewModeControl } from '@/ui/components/ViewModeControl';
-import { colors } from '@/ui/theme';
+import { colors, radius } from '@/ui/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -24,6 +24,9 @@ export default function TabsLayout() {
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.gray,
           tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
+          tabBarActiveBackgroundColor: colors.surfaceAlt,
+          tabBarInactiveBackgroundColor: colors.surfaceAlt,
+          tabBarItemStyle: { marginHorizontal: 4, marginVertical: 6, borderRadius: radius.md },
         }}
       >
         <Tabs.Screen name="index" options={{ title: t.tabs.home, tabBarIcon: icon('pulse-outline') }} />

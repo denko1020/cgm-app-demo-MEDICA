@@ -183,7 +183,7 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {cgm.length >= 2 ? (
+      {!hba1c && cgm.length >= 2 ? (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t.home.recent}</Text>
           <GlucoseChart width={chartWidth - spacing.lg * 2} readings={cgm} events={events} therapy={therapy} health={health} />
@@ -255,12 +255,13 @@ const styles = StyleSheet.create({
   actionBox: {
     flex: 1,
     backgroundColor: colors.background,
-    borderWidth: 1.5,
+    borderWidth: 2.5,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: 4,
+    ...shadow.card,
   },
   actionBoxLabel: { fontSize: 10.5, lineHeight: 13, fontWeight: '700', marginTop: 4, textAlign: 'center' },
 });
