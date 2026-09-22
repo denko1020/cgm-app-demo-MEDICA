@@ -1,4 +1,4 @@
-import Svg, { Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { colors } from '../theme';
 
@@ -7,6 +7,10 @@ export interface LineSeries {
   color: string;
   width?: number;
   dashed?: boolean;
+  /** Catmull-Rom smoothing instead of straight segments between points */
+  smooth?: boolean;
+  /** Fill the area under this series with a fade-to-transparent gradient */
+  areaFill?: boolean;
 }
 
 export interface ChartMarker {
@@ -72,6 +76,29 @@ export function LineChart({
 
   const toPath = (values: number[]) =>
     values.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+
+  /** Catmull-Rom through the points, converted to cubic Bézier segments. */
+  const toSmoothPath = (values: number[]) => {
+    if (values.length < 3) return toPath(values);
+    const pts = values.map((v, i) => [x(i), y(v)] as const);
+    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i += 1) {
+      const p0 = pts[i - 1] ?? pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] ?? p2;
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    }
+    return d;
+  };
+  const areaUnderPath = (values: number[], linePath: string) => {
+    const baseY = padT + plotH;
+    return `${linePath} L${x(values.length - 1).toFixed(1)},${baseY.toFixed(1)} L${x(0).toFixed(1)},${baseY.toFixed(1)} Z`;
+  };
   const areaPath = (a: number[], b: number[]) => {
     const len = Math.min(a.length, b.length);
     if (len < 2) return '';
@@ -85,6 +112,16 @@ export function LineChart({
 
   return (
     <Svg width={width} height={height}>
+      <Defs>
+        {series.map((s, idx) =>
+          s.areaFill ? (
+            <LinearGradient key={`grad${idx}`} id={`chartArea${idx}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={s.color} stopOpacity={0.28} />
+              <Stop offset="1" stopColor={s.color} stopOpacity={0} />
+            </LinearGradient>
+          ) : null,
+        )}
+      </Defs>
       {band ? (
         <Rect x={padL} y={y(band.to)} width={plotW} height={Math.max(0, y(band.from) - y(band.to))} fill={band.color ?? colors.greenSoft} />
       ) : null}
@@ -104,17 +141,34 @@ export function LineChart({
       ) : null}
       <Line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.separator} strokeWidth={1} />
       <Line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.separator} strokeWidth={1} />
-      {series.map((s, idx) => (
-        <Path
-          key={idx}
-          d={toPath(s.values)}
-          stroke={s.color}
-          strokeWidth={s.width ?? 2}
-          strokeDasharray={s.dashed ? '4 3' : undefined}
-          fill="none"
-          strokeLinejoin="round"
-        />
-      ))}
+      {series.map((s, idx) => {
+        const linePath = s.smooth ? toSmoothPath(s.values) : toPath(s.values);
+        return (
+          <Path
+            key={idx}
+            d={s.areaFill ? areaUnderPath(s.values, linePath) : linePath}
+            stroke={s.areaFill ? 'none' : s.color}
+            strokeWidth={s.width ?? 2}
+            strokeDasharray={s.dashed ? '4 3' : undefined}
+            fill={s.areaFill ? `url(#chartArea${idx})` : 'none'}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        );
+      })}
+      {series.map((s, idx) =>
+        s.areaFill ? (
+          <Path
+            key={`line${idx}`}
+            d={s.smooth ? toSmoothPath(s.values) : toPath(s.values)}
+            stroke={s.color}
+            strokeWidth={s.width ?? 2}
+            fill="none"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        ) : null,
+      )}
       {markers.map((m, i) => (
         <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? colors.orange} strokeWidth={1} strokeDasharray="3 2" />
       ))}

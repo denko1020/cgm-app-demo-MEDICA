@@ -55,7 +55,7 @@ export function GlucoseChart({ width, readings, events, therapy, health }: Props
       width={width}
       height={180}
       padLeft={PAD_L}
-      series={[{ values: data.values, color: colors.primary }]}
+      series={[{ values: data.values, color: colors.primary, width: 3, smooth: true, areaFill: true }]}
       band={band}
       yMin={health ? 0 : 40}
       yMax={health ? 100 : 300}

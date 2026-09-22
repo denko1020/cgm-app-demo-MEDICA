@@ -1,7 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View, type SwitchProps } from 'react-native';
 
 import { colors, fonts, radius, spacing } from '../theme';
+
+interface AccentSwitchProps {
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}
+
+/**
+ * Switch with the accent blue as its "on" track/thumb colour. `activeThumbColor`
+ * is supported by react-native-web at runtime but missing from RN's own type
+ * defs, hence the cast.
+ */
+export function AccentSwitch({ value, onValueChange }: AccentSwitchProps) {
+  const extra = { activeThumbColor: colors.background } as Partial<SwitchProps>;
+  return (
+    <Switch
+      value={value}
+      onValueChange={onValueChange}
+      trackColor={{ false: colors.surfaceAlt, true: colors.primary }}
+      thumbColor={colors.background}
+      {...extra}
+    />
+  );
+}
 
 interface SegmentedProps<T extends string | number> {
   options: { label: string; value: T }[];
@@ -40,11 +63,11 @@ export function Stepper({ value, onChange, step = 1, min = -Infinity, max = Infi
     <View style={styles.stepper}>
       <Text style={styles.stepperValue}>{format ? format(value) : String(value)}</Text>
       <Pressable onPress={dec} style={styles.stepBtn} disabled={value <= min}>
-        <Ionicons name="remove" size={18} color={value <= min ? colors.textTertiary : colors.primary} />
+        <Ionicons name="remove-circle" size={22} color={value <= min ? colors.textTertiary : colors.primary} />
       </Pressable>
       <View style={styles.stepDivider} />
       <Pressable onPress={inc} style={styles.stepBtn} disabled={value >= max}>
-        <Ionicons name="add" size={18} color={value >= max ? colors.textTertiary : colors.primary} />
+        <Ionicons name="add-circle" size={22} color={value >= max ? colors.textTertiary : colors.primary} />
       </Pressable>
     </View>
   );

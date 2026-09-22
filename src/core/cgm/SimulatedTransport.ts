@@ -3,8 +3,8 @@ import type { CgmTransport, RawReadingEvent, StatusEvent, Unsubscribe } from './
 import { GlucoseModel } from './glucoseModel';
 
 const CATALOG: DiscoveredDevice[] = [
-  { id: '08328c8145363b3c', name: 'CGM S1', rssi: -58 },
-  { id: '1a7f3e9c02d4b6e8', name: 'CGM S2', rssi: -71 },
+  { id: '08328c8145363b3c', name: 'OHC CGM S1', rssi: -58 },
+  { id: '1a7f3e9c02d4b6e8', name: 'OHC CGM S2', rssi: -71 },
 ];
 
 function gaussianNoise(sd: number): number {

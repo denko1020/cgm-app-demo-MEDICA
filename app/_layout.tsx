@@ -8,8 +8,6 @@ import { activityController } from '@/core/activity/activityController';
 import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
 import { ConfirmProvider } from '@/ui/components/Confirm';
-import { SimSpeedControl } from '@/ui/components/SimSpeedControl';
-import { ViewModeControl } from '@/ui/components/ViewModeControl';
 import { colors } from '@/ui/theme';
 
 export default function RootLayout() {
@@ -38,8 +36,6 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="device/[id]" options={{ title: t.devices.profile }} />
             </Stack>
-            <ViewModeControl />
-            <SimSpeedControl />
           </ConfirmProvider>
         </View>
       </View>

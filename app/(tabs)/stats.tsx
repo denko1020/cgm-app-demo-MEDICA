@@ -9,7 +9,7 @@ import { useAppStore } from '@/core/store/appStore';
 import { csvFilename, readingsToCsv } from '@/core/util/csv';
 import { exportTextFile } from '@/core/util/exportFile';
 import { formatDateTime, toDisplayUnit } from '@/core/util/format';
-import { collectHealthMaterials, healthScore } from '@/core/util/healthIndex';
+import { activeMinutesGoal, collectHealthMaterials, healthScore } from '@/core/util/healthIndex';
 import { Button } from '@/ui/components/Button';
 import { useConfirm } from '@/ui/components/Confirm';
 import { Row, Section } from '@/ui/components/GroupedList';
@@ -28,6 +28,7 @@ export default function StatsScreen() {
   const clearReadings = useAppStore((s) => s.clearReadings);
   const therapy = useAppStore((s) => s.therapy);
   const unit = useAppStore((s) => s.unit);
+  const profile = useAppStore((s) => s.profile);
   const [failNext, setFailNext] = useState(cgmController.uploader.failNext);
 
   const cgm = readings.filter((r) => r.source === 'cgm');
@@ -35,7 +36,7 @@ export default function StatsScreen() {
   const pending = readings.filter((r) => !r.uploaded).length;
   const summary = summarize(readings, therapy, simClock.now() - 86_400_000);
   const materials = collectHealthMaterials(readings, events, activity, therapy, simClock.now());
-  const score = healthScore(materials);
+  const score = healthScore(materials, activeMinutesGoal(profile));
 
   const toggleFail = (v: boolean) => {
     cgmController.uploader.failNext = v;

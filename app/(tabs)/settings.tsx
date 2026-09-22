@@ -1,14 +1,15 @@
 import Constants from 'expo-constants';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
 import { simClock } from '@/core/sim/simClock';
 import { useAppStore } from '@/core/store/appStore';
-import type { SimulatorScenario } from '@/core/types';
+import type { Gender, SimulatorScenario } from '@/core/types';
 import { Button } from '@/ui/components/Button';
 import { useConfirm } from '@/ui/components/Confirm';
-import { Segmented, Stepper } from '@/ui/components/Controls';
+import { AccentSwitch, Segmented, Stepper } from '@/ui/components/Controls';
 import { Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
 import { colors, fonts, spacing } from '@/ui/theme';
@@ -27,6 +28,12 @@ export default function SettingsScreen() {
     { label: t.settings.scenarioHyper, value: 'hyper' },
   ];
 
+  const genderOptions: { label: string; value: Gender }[] = [
+    { label: t.settings.genderMale, value: 'male' },
+    { label: t.settings.genderFemale, value: 'female' },
+    { label: t.settings.genderOther, value: 'other' },
+  ];
+
   // Wipe: drop the sensor link first, then every persisted slice, then the
   // virtual clock, so nothing restores the old session on the next render.
   const onReset = async () => {
@@ -37,9 +44,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <Screen>
-      <Text style={styles.title}>{t.settings.title}</Text>
-
+    <Screen title={t.settings.title}>
       <Section title={t.settings.homeScreen}>
         <Row
           label={t.settings.language}
@@ -48,6 +53,7 @@ export default function SettingsScreen() {
               options={[
                 { label: 'English', value: 'en' as const },
                 { label: '한국어', value: 'ko' as const },
+                { label: 'Español', value: 'es' as const },
               ]}
               value={s.language}
               onChange={s.setLanguage}
@@ -56,7 +62,6 @@ export default function SettingsScreen() {
         />
         <Row
           label={t.settings.unit}
-          last
           right={
             <Segmented
               options={[
@@ -67,6 +72,41 @@ export default function SettingsScreen() {
               onChange={s.setUnit}
             />
           }
+        />
+        <Row
+          label={t.settings.hba1cUnit}
+          last
+          right={
+            <Segmented
+              options={[
+                { label: 'mmol/mol', value: 'mmol/mol' as const },
+                { label: '%HbA1c', value: '%' as const },
+              ]}
+              value={s.hba1cUnit}
+              onChange={s.setHba1cUnit}
+            />
+          }
+        />
+      </Section>
+
+      <Section title={t.settings.profileSection}>
+        <ProfileNameRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
+        <Row
+          label={t.settings.profileAge}
+          right={<Stepper value={s.profile.age} step={1} min={1} max={120} onChange={(v) => s.setProfile({ age: v })} />}
+        />
+        <Row
+          label={t.settings.profileWeight}
+          right={<Stepper value={s.profile.weightKg} step={1} min={20} max={250} onChange={(v) => s.setProfile({ weightKg: v })} />}
+        />
+        <Row
+          label={t.settings.profileHeight}
+          right={<Stepper value={s.profile.heightCm} step={1} min={100} max={230} onChange={(v) => s.setProfile({ heightCm: v })} />}
+        />
+        <Row
+          label={t.settings.profileGender}
+          last
+          right={<Segmented options={genderOptions} value={s.profile.gender} onChange={(gender) => s.setProfile({ gender })} />}
         />
       </Section>
 
@@ -79,11 +119,18 @@ export default function SettingsScreen() {
           label={t.settings.targetHigh}
           right={<Stepper value={s.therapy.targetHigh} step={5} min={s.therapy.targetLow + 10} max={400} onChange={(v) => s.setTherapy({ targetHigh: v })} />}
         />
-        <Row label={t.settings.alerts} last right={<Switch value={s.therapy.alertsEnabled} onValueChange={(v) => s.setTherapy({ alertsEnabled: v })} />} />
+        <Row
+          label={t.settings.alerts}
+          last
+          right={<AccentSwitch value={s.therapy.alertsEnabled} onValueChange={(v) => s.setTherapy({ alertsEnabled: v })} />}
+        />
       </Section>
 
       <Section title={t.settings.app}>
-        <Row label={t.settings.autoUpload} right={<Switch value={s.autoUpload} onValueChange={s.setAutoUpload} />} />
+        <Row
+          label={t.settings.autoUpload}
+          right={<AccentSwitch value={s.autoUpload} onValueChange={s.setAutoUpload} />}
+        />
         <Row
           label={t.settings.simInterval}
           right={
@@ -110,8 +157,25 @@ export default function SettingsScreen() {
   );
 }
 
+interface ProfileNameRowProps {
+  label: string;
+  value: string;
+  onCommit: (name: string) => void;
+}
+
+function ProfileNameRow({ label, value, onCommit }: ProfileNameRowProps) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const commit = () => {
+    const trimmed = text.trim();
+    if (trimmed) onCommit(trimmed);
+    else setText(value);
+  };
+  return <Row label={label} right={<TextInput value={text} onChangeText={setText} onBlur={commit} onSubmitEditing={commit} style={styles.nameInput} />} />;
+}
+
 const styles = StyleSheet.create({
-  title: { ...fonts.title, color: colors.tint, textAlign: 'center', paddingTop: 40 },
   resetBlock: { marginTop: spacing.lg },
   resetNote: { ...fonts.caption, color: colors.textTertiary, paddingHorizontal: spacing.lg, marginTop: spacing.xs },
+  nameInput: { minWidth: 140, textAlign: 'right', ...fonts.body, color: colors.primary },
 });

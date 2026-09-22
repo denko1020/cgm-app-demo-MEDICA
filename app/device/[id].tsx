@@ -1,6 +1,7 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
@@ -23,12 +24,25 @@ export default function DeviceProfileScreen() {
   const activeDeviceId = useAppStore((s) => s.activeDeviceId);
   const connection = useAppStore((s) => s.connection);
   const setAlgorithm = useAppStore((s) => s.setAlgorithm);
+  const renameDevice = useAppStore((s) => s.renameDevice);
   const [now, setNow] = useState(simClock.now());
+  const navigation = useNavigation();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(simClock.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // A bolder, easier-to-tap back arrow than the system default.
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color={colors.primary} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, router]);
 
   if (!device) {
     return (
@@ -54,8 +68,9 @@ export default function DeviceProfileScreen() {
 
   return (
     <Screen>
+      <Image source={require('../../assets/device-sensor.png')} style={styles.deviceImage} resizeMode="contain" />
       <Section title={t.devices.general}>
-        <Row label={t.devices.name} value={device.name} />
+        <DeviceNameRow label={t.devices.name} value={device.name} onCommit={(name) => renameDevice(device.id, name)} />
         <Row label={t.devices.connection} value={connectionLabel} valueColor={connected ? colors.green : colors.red} />
         <Row label={t.devices.signal} value={`${device.rssi} dBm`} last />
       </Section>
@@ -91,6 +106,23 @@ export default function DeviceProfileScreen() {
   );
 }
 
+interface DeviceNameRowProps {
+  label: string;
+  value: string;
+  onCommit: (name: string) => void;
+}
+
+function DeviceNameRow({ label, value, onCommit }: DeviceNameRowProps) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const commit = () => {
+    const trimmed = text.trim();
+    if (trimmed) onCommit(trimmed);
+    else setText(value);
+  };
+  return <Row label={label} right={<TextInput value={text} onChangeText={setText} onBlur={commit} onSubmitEditing={commit} style={styles.input} />} />;
+}
+
 interface ParamRowProps {
   label: string;
   field: keyof AlgorithmParameters;
@@ -122,6 +154,8 @@ function ParamRow({ label, field, device, onChange, last }: ParamRowProps) {
 
 const styles = StyleSheet.create({
   missing: { ...fonts.body, color: colors.textSecondary, padding: spacing.lg },
+  deviceImage: { width: '100%', height: 160, marginTop: spacing.lg },
+  backButton: { paddingHorizontal: 4, paddingVertical: 4 },
   input: {
     minWidth: 80,
     textAlign: 'right',

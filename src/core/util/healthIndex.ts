@@ -1,4 +1,4 @@
-import type { ActivitySample, GlucoseReading, ScenarioEvent, TherapySettings } from '../types';
+import type { ActivitySample, GlucoseReading, ScenarioEvent, TherapySettings, UserProfile } from '../types';
 
 export const HEALTH_WINDOW_MS = 86_400_000;
 /** Steps per minute from which a window counts as active movement (brisk walking) */
@@ -59,14 +59,26 @@ export function collectHealthMaterials(
 /**
  * The health index itself: one function over the materials above, so a new
  * definition only has to change this body. Current placeholder weights —
- *   40 % time in range, 30 % active minutes (30 min/day = full marks),
+ *   40 % time in range, 30 % active minutes (goalActiveMinutes/day = full marks),
  *   30 % post-meal rise (≤30 mg/dL full marks, ≥120 mg/dL zero; no meal = no penalty).
  * Returns null until at least one CGM reading exists.
  */
-export function healthScore(m: HealthMaterials): number | null {
+export function healthScore(m: HealthMaterials, goalActiveMinutes = 30): number | null {
   if (m.timeInRange === null) return null;
   const tir = m.timeInRange;
-  const active = Math.min(m.activeMinutes / 30, 1);
+  const active = Math.min(m.activeMinutes / Math.max(1, goalActiveMinutes), 1);
   const rise = m.postMealRise === null ? 1 : Math.min(1, Math.max(0, 1 - (m.postMealRise - 30) / 90));
   return Math.round((0.4 * tir + 0.3 * active + 0.3 * rise) * 100);
+}
+
+/**
+ * Daily active-minutes goal derived from the user's profile (BMI). A higher
+ * BMI raises the bar, matching common activity-guideline heuristics: 30
+ * min/day at a healthy weight, 45 min/day at BMI ≥ 25.
+ */
+export function activeMinutesGoal(profile: UserProfile): number {
+  const heightM = profile.heightCm / 100;
+  if (heightM <= 0) return 30;
+  const bmi = profile.weightKg / (heightM * heightM);
+  return bmi >= 25 ? 45 : 30;
 }

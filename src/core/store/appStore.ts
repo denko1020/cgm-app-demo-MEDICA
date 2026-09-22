@@ -10,12 +10,14 @@ import type {
   DiscoveredDevice,
   GlucoseReading,
   GlucoseUnit,
+  Hba1cUnit,
   Language,
   PairedDevice,
   ScenarioEvent,
   SimulatorOptions,
   TherapySettings,
   Trend,
+  UserProfile,
   ViewMode,
 } from '../types';
 import { simClock } from '../sim/simClock';
@@ -35,10 +37,12 @@ const DEFAULT_ALGORITHM: AlgorithmParameters = {
 export interface AppState {
   language: Language;
   unit: GlucoseUnit;
+  hba1cUnit: Hba1cUnit;
   viewMode: ViewMode;
   therapy: TherapySettings;
   simulator: SimulatorOptions;
   autoUpload: boolean;
+  profile: UserProfile;
 
   devices: PairedDevice[];
   activeDeviceId: string | null;
@@ -58,10 +62,12 @@ export interface AppState {
 
   setLanguage(language: Language): void;
   setUnit(unit: GlucoseUnit): void;
+  setHba1cUnit(unit: Hba1cUnit): void;
   setViewMode(mode: ViewMode): void;
   setTherapy(patch: Partial<TherapySettings>): void;
   setSimulator(patch: Partial<SimulatorOptions>): void;
   setAutoUpload(enabled: boolean): void;
+  setProfile(patch: Partial<UserProfile>): void;
 
   setScanning(scanning: boolean): void;
   addDiscovered(device: DiscoveredDevice): void;
@@ -69,6 +75,7 @@ export interface AppState {
   pairDevice(device: DiscoveredDevice, info: DeviceInfo): void;
   forgetDevice(deviceId: string): void;
   setActiveDevice(deviceId: string | null): void;
+  renameDevice(deviceId: string, name: string): void;
   setConnection(state: ConnectionState): void;
   updateDevice(deviceId: string, patch: Partial<PairedDevice>): void;
   setAlgorithm(deviceId: string, patch: Partial<AlgorithmParameters>): void;
@@ -87,10 +94,12 @@ export interface AppState {
 const INITIAL = {
   language: 'en' as Language,
   unit: 'mg/dL' as GlucoseUnit,
+  hba1cUnit: 'mmol/mol' as Hba1cUnit,
   viewMode: 'glucose' as ViewMode,
   therapy: { targetLow: 70, targetHigh: 180, alertsEnabled: true } as TherapySettings,
   simulator: { intervalSec: 10, scenario: 'normal', timeScale: 1, paused: false } as SimulatorOptions,
   autoUpload: true,
+  profile: { name: 'Alex Kim', age: 42, weightKg: 72, heightCm: 172, gender: 'other' } as UserProfile,
 
   devices: [] as PairedDevice[],
   activeDeviceId: null as string | null,
@@ -127,6 +136,8 @@ export const useAppStore = create<AppState>()(
 
       setLanguage: (language) => set({ language }),
       setUnit: (unit) => set({ unit }),
+      setHba1cUnit: (hba1cUnit) => set({ hba1cUnit }),
+      setProfile: (patch) => set((s) => ({ profile: { ...s.profile, ...patch } })),
       setTherapy: (patch) => set({ therapy: { ...get().therapy, ...patch } }),
       setSimulator: (patch) =>
         set((s) => {
@@ -162,6 +173,8 @@ export const useAppStore = create<AppState>()(
           connection: s.activeDeviceId === deviceId ? 'disconnected' : s.connection,
         })),
       setActiveDevice: (activeDeviceId) => set({ activeDeviceId }),
+      renameDevice: (deviceId, name) =>
+        set((s) => ({ devices: s.devices.map((d) => (d.id === deviceId ? { ...d, name } : d)) })),
       setConnection: (connection) => set({ connection }),
       updateDevice: (deviceId, patch) =>
         set((s) => ({ devices: s.devices.map((d) => (d.id === deviceId ? { ...d, ...patch } : d)) })),
@@ -225,15 +238,23 @@ export const useAppStore = create<AppState>()(
       // Deep-merge nested option objects so that fields added in newer builds keep their defaults.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>;
-        return { ...current, ...p, simulator: { ...current.simulator, ...p.simulator }, therapy: { ...current.therapy, ...p.therapy } };
+        return {
+          ...current,
+          ...p,
+          simulator: { ...current.simulator, ...p.simulator },
+          therapy: { ...current.therapy, ...p.therapy },
+          profile: { ...current.profile, ...p.profile },
+        };
       },
       partialize: (s) => ({
         language: s.language,
         unit: s.unit,
+        hba1cUnit: s.hba1cUnit,
         viewMode: s.viewMode,
         therapy: s.therapy,
         simulator: s.simulator,
         autoUpload: s.autoUpload,
+        profile: s.profile,
         devices: s.devices,
         activeDeviceId: s.activeDeviceId,
         readings: s.readings,

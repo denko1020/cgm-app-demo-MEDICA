@@ -1,7 +1,8 @@
 // Platform-independent domain types shared by web, iOS and Android builds.
 
-export type Language = 'en' | 'ko';
+export type Language = 'en' | 'ko' | 'es';
 export type GlucoseUnit = 'mg/dL' | 'mmol/L';
+export type Hba1cUnit = 'mmol/mol' | '%';
 
 export type ReadingSource = 'cgm' | 'bgm';
 
@@ -52,8 +53,18 @@ export interface PairedDevice extends DiscoveredDevice {
   pairedAt: number;
 }
 
-/** What the Home card/chart and Readings list display: raw glucose or the derived health index */
-export type ViewMode = 'glucose' | 'health';
+/** What the Home card/chart and Readings list display: raw glucose, the derived health index, or estimated HbA1c */
+export type ViewMode = 'glucose' | 'health' | 'hba1c';
+
+export type Gender = 'male' | 'female' | 'other';
+
+export interface UserProfile {
+  name: string;
+  age: number;
+  weightKg: number;
+  heightCm: number;
+  gender: Gender;
+}
 
 export type SimulatorScenario = 'normal' | 'meal' | 'hypo' | 'hyper';
 
