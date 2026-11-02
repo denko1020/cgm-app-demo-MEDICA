@@ -64,8 +64,13 @@ const LIT: Record<Trend, number> = {
 const RISING: Trend[] = ['up', 'upModerate', 'upSlight'];
 const FALLING: Trend[] = ['down', 'downModerate', 'downSlight'];
 
-/** Width of the outermost chevron's replacement tip, in viewBox units. */
-const TIP_W = 18;
+/**
+ * The triangle that replaces the outermost band at 12/6 o'clock, in viewBox
+ * units. It fills the same slot as that band — base where the band's stroke
+ * ended, point on the artwork's edge — so the stack keeps its spacing.
+ */
+const TIP_W = 24;
+const TIP_BASE = 9;
 
 function tintFor(trend: Trend): string {
   if (RISING.includes(trend)) return colors.trendRise;
@@ -104,7 +109,7 @@ export function TrendTile({ trend, size = 56 }: Props) {
     // At 12/6 o'clock, the outermost band becomes a small triangle whose
     // point touches the artwork's edge instead of a curved chevron.
     if (index === WAVES.length - 1 && pointingClock) {
-      const baseY = below ? VB_H - base : base;
+      const baseY = below ? VB_H - TIP_BASE : TIP_BASE;
       const tipY = below ? VB_H : 0;
       return (
         <Path
