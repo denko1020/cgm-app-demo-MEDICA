@@ -32,7 +32,8 @@ erDiagram
     APP_DOCUMENT ||--|| SIMULATOR_OPTIONS : "1"
     APP_DOCUMENT ||--o{ PAIRED_DEVICE : "0..N"
     APP_DOCUMENT ||--o{ GLUCOSE_READING : "0..2000"
-    APP_DOCUMENT ||--o{ SCENARIO_EVENT : "0..2000"
+    APP_DOCUMENT ||--o{ SCENARIO_EVENT : "events[] 합산 0..2000"
+    APP_DOCUMENT ||--o{ USER_EVENT : "events[] 합산 0..2000"
     APP_DOCUMENT ||--o{ ACTIVITY_SAMPLE : "0..2880"
 
     PAIRED_DEVICE ||--|| DEVICE_INFO : "임베드"
@@ -54,14 +55,22 @@ erDiagram
         int    timestamp
         int    raw
         int    value
+        float  ketone "mmol/L, CGM 만"
+        float  lactate "mmol/L, CGM 만"
         enum   trend
         bool   uploaded
     }
     SCENARIO_EVENT {
         string id PK
         int    timestamp
+        enum   kind "scenario (생략 가능)"
         enum   from
         enum   to
+    }
+    USER_EVENT {
+        string id PK
+        int    timestamp
+        enum   kind "meal·exercise·sleep·medication"
     }
     ACTIVITY_SAMPLE {
         string id PK
@@ -91,7 +100,7 @@ erDiagram
 | `devices` | `PairedDevice[]` | ✅ | `[]` | 페어링 기기 |
 | `activeDeviceId` | `string \| null` | ✅ | `null` | 현재 연결 대상 |
 | `readings` | `GlucoseReading[]` | ✅ | `[]` | 측정값 (오래된 것 먼저) |
-| `events` | `ScenarioEvent[]` | ✅ | `[]` | 시나리오 전환 |
+| `events` | `AppEvent[]` | ✅ | `[]` | 시나리오 전환(`ScenarioEvent`)과 사용자 로그 이벤트(`UserEvent`)가 한 배열에 시간순으로 섞임 |
 | `activity` | `ActivitySample[]` | ✅ | `[]` | 걸음 창 |
 | `lastReadingAt` | `number \| null` | ✅ | `null` | 마지막 CGM 측정 시각(가상 시계). 재시작 시 `simClock.ensureAtLeast()` 의 하한 |
 | `lastUploadAt` | `number \| null` | ✅ | `null` | 마지막 업로드 성공 시각(**실제 시계**) |
@@ -175,26 +184,36 @@ erDiagram
 | `timestamp` | `number` | 가상 시계 epoch ms |
 | `raw` | `number` | 보정 전 원시값 (mg/dL). BGM 은 `value` 와 동일 |
 | `value` | `number` | **항상 mg/dL 정수**. 표시 단위 변환은 렌더 시점에만 |
-| `trend` | `Trend` | BGM 은 항상 `'unknown'` |
+| `ketone?` | `number` | 혈중 케톤(β-hydroxybutyrate), mmol/L, 소수 2자리. **CGM 만** — BGM 수동 입력과 구버전 측정값에는 없음 |
+| `lactate?` | `number` | 혈중 락테이트, mmol/L, 소수 2자리. **CGM 만** — 위와 동일 |
+| `trend` | `Trend` | 혈당 기준 추세. BGM 은 항상 `'unknown'` |
 | `uploaded` | `boolean` | 업로드 성공 시 `true` |
 
-**값 계산 (`addCgmReading`)**
+**값 계산 (`addCgmReading(deviceId, sample)`)** — `sample` 은 `CgmSample = { raw, timestamp, ketone, lactate }`.
 
 ```
 recentRaw = [같은 기기의 최근 (smoothingWindow − 1)개 raw, 이번 raw]
 value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
+ketone    = round2(sample.ketone)      // 별도 전극이라 보정·평활화 대상 아님
+lactate   = round2(sample.lactate)     // 위와 동일
 ```
 
-**추세 계산 (`computeTrend`)** — 같은 기기의 CGM 이력에서 3개 전(없으면 직전) 값을 기준으로 측정당 변화량을 구함.
+케톤·락테이트는 혈당과 다른 전극에서 나오므로 `calibrationSlope` / `calibrationOffset` / `smoothingWindow` 가 적용되지 않고, 소수 2자리 반올림만 거쳐 그대로 저장됨.
 
-| 측정당 변화량 (mg/dL) | `trend` |
-|---|---|
-| > +3 | `up` |
-| +1 초과 +3 이하 | `upSlight` |
-| −1 이상 +1 이하 | `flat` |
-| −3 이상 −1 미만 | `downSlight` |
-| < −3 | `down` |
-| 이력 없음 | `unknown` |
+**추세 계산 (`computeTrend` → `classifyTrend`)** — 같은 기기의 CGM 이력에서 3개 전(없으면 직전) 값을 기준으로 측정당 변화량을 구함. 경계는 혈당축 폭(`GLUCOSE_AXIS_RANGE` = 260 mg/dL)에 대한 비율로 정의돼 있어 케톤·락테이트 축에도 같은 사다리가 적용됨(`src/core/util/analyte.ts`).
+
+| 측정당 변화량 (mg/dL) | `trend` | 다이얼 |
+|---|---|---|
+| > +4.5 | `up` | 12시 |
+| +2.5 초과 +4.5 이하 | `upModerate` | 1시 |
+| +1 초과 +2.5 이하 | `upSlight` | 2시 |
+| −1 이상 +1 이하 | `flat` | 점 3개 |
+| −2.5 이상 −1 미만 | `downSlight` | 4시 |
+| −4.5 이상 −2.5 미만 | `downModerate` | 5시 |
+| < −4.5 | `down` | 6시 |
+| 이력 없음 | `unknown` | 점 3개 |
+
+표시용 추세(Home 카드의 다이얼)는 저장된 `trend` 가 아니라, 보고 있는 분석물(혈당·케톤·락테이트)에 대해 `analyteTrend()` 가 최근 4개 측정값으로 매번 다시 계산함. 저장 필드는 CSV 내보내기와 목록 표시용임.
 
 ### 3.5 `ScenarioEvent` — 시나리오 전환
 
@@ -202,13 +221,32 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 |---|---|---|
 | `id` | `string` | **PK** |
 | `timestamp` | `number` | 가상 시계 epoch ms |
-| `kind?` | `'scenario'` | 구버전 호환용. 현재 종류는 이것뿐 |
+| `kind?` | `'scenario'` | 선택 필드. 값이 없으면 시나리오 전환으로 간주(`isScenarioEvent`) |
 | `from` | `SimulatorScenario` | 이전 시나리오 |
 | `to` | `SimulatorScenario` | 새 시나리오 |
 
 같은 시나리오로의 재설정은 기록하지 않음. Readings 목록·CSV·식후 상승폭 계산의 기준점으로 쓰임.
 
-### 3.6 `ActivitySample` — 걸음 창
+### 3.6 `UserEvent` — 사용자가 기록한 이벤트
+
+Home 카드의 아이콘 4개로 기록함. `ScenarioEvent` 와 **같은 `events` 배열**에 저장되며, 둘을 합친 타입이 `AppEvent` 임.
+
+| 필드 | 타입 | 비고 |
+|---|---|---|
+| `id` | `string` | **PK** |
+| `timestamp` | `number` | 가상 시계 epoch ms |
+| `kind` | `UserEventKind` | `meal` / `exercise` / `sleep` / `medication` — **필수**(이 필드가 시나리오 전환과의 구분자) |
+
+기록하면 저장과 동시에 가상 센서(`glucoseModel`)에 종 모양 임펄스를 넣어 측정값을 실제로 움직임. 겹쳐 기록할 수 있음.
+
+| `kind` | 혈당 피크 | 지속(측정 횟수) |
+|---|---|---|
+| `meal` | +90 mg/dL | 40 |
+| `exercise` | −35 mg/dL | 30 |
+| `sleep` | −10 mg/dL | 60 |
+| `medication` | −45 mg/dL | 50 |
+
+### 3.7 `ActivitySample` — 걸음 창
 
 | 필드 | 타입 | 시뮬레이터 값 |
 |---|---|---|
@@ -219,7 +257,7 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 
 분당 `ACTIVE_STEPS_PER_MIN`(60보) 이상인 창만 "활동 분"으로 셈. 가상 만보기는 최대 8보/분이라 데모에서는 활동 분이 0으로 유지됨 — 네이티브 만보기를 붙이면 채워짐.
 
-### 3.7 `TherapySettings`
+### 3.8 `TherapySettings`
 
 | 필드 | 타입 | 기본값 | 범위(UI 스테퍼) |
 |---|---|---|---|
@@ -227,7 +265,7 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 | `targetHigh` | `number` | `180` | `targetLow + 10` … 400, 5 단위 |
 | `alertsEnabled` | `boolean` | `true` | — |
 
-### 3.8 `SimulatorOptions`
+### 3.9 `SimulatorOptions`
 
 | 필드 | 타입 | 기본값 | 허용값 |
 |---|---|---|---|
@@ -245,9 +283,11 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 | `Language` | `en`, `ko`, `es` |
 | `GlucoseUnit` | `mg/dL`, `mmol/L` (표시 변환: `mgdl / 18.016`) |
 | `Hba1cUnit` | `mmol/mol`, `%` |
-| `ViewMode` | `glucose`, `health`, `hba1c` |
+| `Analyte` | `glucose`(mg/dL, 기준 40–300), `ketone`(mmol/L, 정상 ≤0.6, 축 0–3), `lactate`(mmol/L, 정상 ≤2.2, 축 0–8) |
+| `ViewMode` | `Analyte` 3종 + `hba1c` — 화면 상단 토글의 GLU / KET / LAC / HbA1c |
 | `ReadingSource` | `cgm`, `bgm` |
-| `Trend` | `up ↑`, `upSlight ↗`, `flat →`, `downSlight ↘`, `down ↓`, `unknown ·` |
+| `Trend` | `up ⇈`, `upModerate ↑`, `upSlight ↗`, `flat →`, `downSlight ↘`, `downModerate ↓`, `down ⇊`, `unknown ·` |
+| `UserEventKind` | `meal`, `exercise`, `sleep`, `medication` |
 | `ConnectionState` | `disconnected`, `connecting`, `connected` |
 | `Gender` | `male`, `female`, `other` |
 | `SimulatorScenario` | `normal`(≈105), `meal`(+90 후 복귀), `hypo`(≈55), `hyper`(≈260) — 단위 mg/dL |
@@ -272,10 +312,10 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 | 컬렉션 | 상한 | 환산 |
 |---|---|---|
 | `readings` | 2 000건 | 10초 간격 기준 약 5.5시간 |
-| `events` | 2 000건 | — |
+| `events` | 2 000건 | 시나리오 전환 + 사용자 이벤트 합산 |
 | `activity` | 2 880건 | 가상 1분/건 → 2일 |
 
-**용량** — 측정값 1건 ≈ 160 B, 걸음 1건 ≈ 75 B → 최대 적재 시 문서 약 0.6 MB. 브라우저 `localStorage` 한도(출처당 5–10 MB) 안쪽임.
+**용량** — JSON 직렬화 기준 측정값 1건 ≈ 180 B(케톤·락테이트 포함), 이벤트 1건 ≈ 65 B, 걸음 1건 ≈ 77 B → 세 컬렉션이 모두 상한일 때 문서 약 0.67 MB. 브라우저 `localStorage` 한도(출처당 5–10 MB) 안쪽임.
 
 **시간축** — `lastUploadAt` 하나만 실제 `Date.now()` 이고, 나머지 모든 `timestamp` 는 **가상 시계(`simClock`)** 기준임. 배속 100x 에서는 가상 시각이 실제 시각보다 한참 앞서므로, 두 축을 섞어 비교하면 안 됨.
 
@@ -285,8 +325,9 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 
 | 액션 | 영향 받는 컬렉션 | 비고 |
 |---|---|---|
-| `addCgmReading(deviceId, raw, ts)` | `readings`, `lastReadingAt` | 평활화·보정·추세 계산 후 append |
-| `addBgmReading(value, ts?)` | `readings` | `deviceId='manual'`, `raw=value`, `trend='unknown'` |
+| `addCgmReading(deviceId, sample)` | `readings`, `lastReadingAt` | `sample = { raw, timestamp, ketone, lactate }`. 혈당만 평활화·보정·추세 계산, 케톤·락테이트는 반올림만 |
+| `addBgmReading(value, ts?)` | `readings` | `deviceId='manual'`, `raw=value`, `trend='unknown'`, 케톤·락테이트 없음 |
+| `logEvent(kind)` | `events` | 사용자 이벤트 1건 append + 가상 센서에 임펄스 주입(`cgmController.logEvent`) |
 | `addActivitySample(sample)` | `activity` | 가상 1분마다 |
 | `setSimulator({scenario})` | `simulator`, `events` | 값이 실제로 바뀔 때만 이벤트 1건 |
 | `pairDevice` / `forgetDevice` / `renameDevice` / `updateDevice` / `setAlgorithm` | `devices` | — |
@@ -304,8 +345,9 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 
 | 파생값 | 정의 | 위치 |
 |---|---|---|
-| 포만감 지수 (%) | `(mgdl − 40) / (300 − 40) × 100`, 0–100 클램프 | `util/format.ts` |
-| 건강 지수 (단건, %) | `100 − 포만감 지수` | `util/format.ts` |
+| 분석물 기준범위·축 (`AnalyteSpec`) | 혈당은 사용자 목표 범위, 케톤 ≤0.6, 락테이트 ≤2.2 | `util/analyte.ts` |
+| 분석물 상태 (`low`/`inRange`/`high`) | 값과 기준범위 비교. 케톤·락테이트는 하한 0이라 `low` 가 나오지 않음 | `util/analyte.ts` |
+| 표시용 추세 | 보고 있는 분석물의 최근 4개 측정값으로 매번 재계산 (`analyteTrend`) | `util/analyte.ts` |
 | 추정 HbA1c (%) | `(평균 mg/dL + 46.7) / 28.7` (ADAG) | `util/hba1c.ts` |
 | 추정 HbA1c (mmol/mol) | `10.929 × (% − 2.15)` (IFCC) | `util/hba1c.ts` |
 | 24시간 요약 | `count` / `mean` / `min` / `max` / `timeInRange` | `util/glucoseSummary.ts` |
@@ -358,6 +400,8 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
         "timestamp": 1759795210000,
         "raw": 107,
         "value": 106,
+        "ketone": 0.21,
+        "lactate": 1.04,
         "trend": "flat",
         "uploaded": true
       },
@@ -379,6 +423,11 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
         "kind": "scenario",
         "from": "normal",
         "to": "meal"
+      },
+      {
+        "id": "m1x8k2p-5e-9h2k",
+        "timestamp": 1759795700000,
+        "kind": "meal"
       }
     ],
     "activity": [
@@ -395,24 +444,26 @@ value     = round( mean(recentRaw) × calibrationSlope + calibrationOffset )
 
 ## 9. CSV 내보내기 스키마
 
-`readingsToCsv()` 가 측정값과 시나리오 전환을 **하나의 타임라인**(오래된 것 먼저)으로 병합해 RFC 4180 CSV 로 직렬화함. 파일명 `cgm-readings-YYYYMMDD-HHMM.csv`, 줄바꿈 CRLF.
+`readingsToCsv()` 가 측정값과 이벤트 타임라인(시나리오 전환 + 사용자 이벤트)을 **하나의 타임라인**(오래된 것 먼저)으로 병합해 RFC 4180 CSV 로 직렬화함. 파일명 `cgm-readings-YYYYMMDD-HHMM.csv`, 줄바꿈 CRLF. 열 14개.
 
-| # | 컬럼 | 측정값 행 | 시나리오 행 |
-|---|---|---|---|
-| 1 | `timestamp_iso` | ISO 8601 | ISO 8601 |
-| 2 | `timestamp_ms` | epoch ms | epoch ms |
-| 3 | `source` | `cgm` 또는 `bgm` | `scenario` |
-| 4 | `device_id` | 기기 id 또는 `manual` | 빈 값 |
-| 5 | `value_mgdl` | mg/dL 정수 | 빈 값 |
-| 6 | `value_display` | 선택 단위 환산값 | 빈 값 |
-| 7 | `unit` | `mg/dL` 또는 `mmol/L` | 빈 값 |
-| 8 | `raw_mgdl` | 보정 전 원시값 | 빈 값 |
-| 9 | `trend` | `Trend` 코드 | 빈 값 |
-| 10 | `uploaded` | `true` / `false` | 빈 값 |
-| 11 | `note` | 빈 값 | `scenario <from> -> <to>` |
-| 12 | `id` | 레코드 PK | 이벤트 PK |
+| # | 컬럼 | 측정값 행 | 시나리오 행 | 사용자 이벤트 행 |
+|---|---|---|---|---|
+| 1 | `timestamp_iso` | ISO 8601 | ISO 8601 | ISO 8601 |
+| 2 | `timestamp_ms` | epoch ms | epoch ms | epoch ms |
+| 3 | `source` | `cgm` 또는 `bgm` | `scenario` | `event` |
+| 4 | `device_id` | 기기 id 또는 `manual` | 빈 값 | 빈 값 |
+| 5 | `value_mgdl` | mg/dL 정수 | 빈 값 | 빈 값 |
+| 6 | `value_display` | 선택 단위 환산값 | 빈 값 | 빈 값 |
+| 7 | `unit` | `mg/dL` 또는 `mmol/L` | 빈 값 | 빈 값 |
+| 8 | `ketone_mmoll` | mmol/L (없으면 빈 값) | 빈 값 | 빈 값 |
+| 9 | `lactate_mmoll` | mmol/L (없으면 빈 값) | 빈 값 | 빈 값 |
+| 10 | `raw_mgdl` | 보정 전 원시값 | 빈 값 | 빈 값 |
+| 11 | `trend` | `Trend` 코드 | 빈 값 | 빈 값 |
+| 12 | `uploaded` | `true` / `false` | 빈 값 | 빈 값 |
+| 13 | `note` | 빈 값 | `scenario <from> -> <to>` | `meal` / `exercise` / `sleep` / `medication` |
+| 14 | `id` | 레코드 PK | 이벤트 PK | 이벤트 PK |
 
-`activity` 컬렉션은 현재 CSV 에 포함되지 않음.
+`activity` 컬렉션은 현재 CSV 에 포함되지 않음. 시뮬레이터 전용 열(배속 등)도 넣지 않음 — 검증은 `src/core/util/csv.test.ts` 가 맡음.
 
 ---
 
@@ -484,15 +535,18 @@ create table glucose_readings (
   measured_at  timestamptz not null,
   raw_mgdl     smallint not null check (raw_mgdl   between 20 and 600),
   value_mgdl   smallint not null check (value_mgdl between 20 and 600),
+  ketone_mmoll  numeric(4,2) check (ketone_mmoll  between 0 and 10),  -- CGM 만, BGM·구버전은 null
+  lactate_mmoll numeric(4,2) check (lactate_mmoll between 0 and 20),  -- 위와 동일
   trend        text not null default 'unknown'
-               check (trend in ('up','upSlight','flat','downSlight','down','unknown')),
+               check (trend in ('up','upModerate','upSlight','flat',
+                                'downSlight','downModerate','down','unknown')),
   received_at  timestamptz not null default now(),
   unique (patient_id, client_id)                  -- 중복 업로드 방어
 );
 create index on glucose_readings (patient_id, measured_at desc);
 create index on glucose_readings (device_id,  measured_at desc);
 
--- 시나리오 전환 (데모 전용. 실사용에서는 식사/운동 로그로 대체) -----------
+-- 시나리오 전환 (데모 전용. 실사용 배포 때는 테이블째 빠지는 자리) ---------
 create table scenario_events (
   id          uuid primary key default gen_random_uuid(),
   client_id   text not null,
@@ -503,6 +557,17 @@ create table scenario_events (
   unique (patient_id, client_id)
 );
 create index on scenario_events (patient_id, occurred_at desc);
+
+-- 사용자가 기록한 이벤트 (식사·운동·수면·복약) — 실사용에서도 그대로 남는 쪽 --
+create table user_events (
+  id          uuid primary key default gen_random_uuid(),
+  client_id   text not null,
+  patient_id  uuid not null references patients(id) on delete cascade,
+  occurred_at timestamptz not null,
+  kind        text not null check (kind in ('meal','exercise','sleep','medication')),
+  unique (patient_id, client_id)
+);
+create index on user_events (patient_id, occurred_at desc);
 
 -- 활동 ------------------------------------------------------------------
 create table activity_samples (
@@ -530,6 +595,8 @@ create table upload_batches (
 **전환 시 고려사항**
 
 - **멱등성** — 로컬 `id`(= `client_id`)에 `unique (patient_id, client_id)` 를 걸고 `insert … on conflict do nothing` 으로 보내면, 업로드 실패 후 재시도에도 중복이 생기지 않음.
+- **이벤트 분리** — 로컬은 `events` 배열 하나에 시나리오 전환과 사용자 이벤트를 섞어 두지만(`AppEvent`), 서버에서는 성격이 달라 두 테이블로 나눔. `isScenarioEvent()` 로 갈라 각각 보내면 됨. 시나리오 전환은 데모 산출물이므로 실제 배포에서는 보내지 않아도 됨.
+- **케톤·락테이트** — 구버전 측정값에는 없는 선택 필드이므로 서버 컬럼도 `null` 허용으로 두고, 집계 시 `where ketone_mmoll is not null` 로 걸러야 함.
 - **시간축** — 로컬 `timestamp` 는 가상 시계값임. 서버로 보낼 때는 실제 시각으로 환산하거나, 데모 데이터임을 표시하는 플래그를 함께 보내야 함.
 - **단위** — 저장은 mg/dL 정수로 통일하고 표시 단위는 사용자 설정으로만 둠(현재 로컬 모델과 같은 원칙).
 - **RLS** — Supabase 사용 시 모든 테이블에 `enable row level security` 를 켜고 `patient_id` 가 `auth.uid()` 에 매핑되는 정책을 둘 것. 환자 데이터이므로 기본 차단이 전제임.
@@ -563,4 +630,11 @@ merge: (persisted, current) => ({
 | 열거형 값 제거 | ❌ | 저장된 구값이 그대로 복원됨 |
 | 키 이름 변경 | ❌ | 구값이 버려짐. `migrate` 필요 |
 
-`ScenarioEvent.kind` 가 선택 필드(`kind?`)인 것이 이 정책의 실제 사례임 — 구버전 문서에 없던 필드를 타입에서 선택으로 두어 병합만으로 넘어가게 함.
+실제 사례 둘 다 같은 수법을 씀 — **새 필드를 선택(`?`)으로 두어 `migrate` 없이 병합만으로 넘어가게** 하는 것.
+
+| 사례 | 필드 | 구버전 문서에서 읽을 때 |
+|---|---|---|
+| 사용자 이벤트 도입 | `ScenarioEvent.kind?` | 값이 없으면 시나리오 전환으로 간주(`isScenarioEvent`) |
+| 케톤·락테이트 도입 | `GlucoseReading.ketone?` / `.lactate?` | `undefined` → 차트·목록에서 해당 측정값을 건너뜀(`analyteValue`), CSV 는 빈 칸 |
+
+둘 다 `version` 을 올리지 않고 넘어갔음. 반대로 기존 필드의 의미·단위를 바꾸는 변경은 이 방식으로 흡수되지 않으므로 `version` + `migrate` 가 필요함.
