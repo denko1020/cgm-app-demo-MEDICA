@@ -13,14 +13,17 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 const ICONS: Record<ViewMode, IconName> = {
   glucose: 'water-outline',
-  health: 'heart-circle-outline',
+  ketone: 'flame-outline',
+  lactate: 'pulse-outline',
   hba1c: 'flask-outline',
 };
 
 /**
  * Global view-mode toggle pinned to the top-left corner, mirroring the speed
- * chip on the right. Cycles the Home card/chart and the Readings list
- * between raw glucose, the derived health index (%) and estimated HbA1c.
+ * chip on the right. Switches the Home card/chart and the Readings list between
+ * the three analytes the sensor measures and the estimated HbA1c derived from
+ * them. Labelled with the lab abbreviations (GLU, KET, LAC) to stay readable at
+ * chip size in every language.
  */
 export function ViewModeControl() {
   const t = useStrings();
@@ -34,7 +37,8 @@ export function ViewModeControl() {
 
   const options: { value: ViewMode; label: string }[] = [
     { value: 'glucose', label: t.mode.glucose },
-    { value: 'health', label: t.mode.health },
+    { value: 'ketone', label: t.mode.ketone },
+    { value: 'lactate', label: t.mode.lactate },
     { value: 'hba1c', label: t.mode.hba1c },
   ];
 
@@ -69,7 +73,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 13,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     height: 26,
   },
   chipActive: { backgroundColor: colors.primary },

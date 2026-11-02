@@ -1,9 +1,10 @@
-import type { ActivitySample, GlucoseReading, ScenarioEvent, TherapySettings, UserProfile } from '../types';
+import type { ActivitySample, AppEvent, GlucoseReading, TherapySettings, UserProfile } from '../types';
+import { isScenarioEvent } from '../types';
 
 export const HEALTH_WINDOW_MS = 86_400_000;
 /** Steps per minute from which a window counts as active movement (brisk walking) */
 export const ACTIVE_STEPS_PER_MIN = 60;
-/** How long after a meal switch we look for the glucose peak */
+/** How long after a meal we look for the glucose peak */
 const POST_MEAL_WINDOW_MS = 2 * 3_600_000;
 
 /**
@@ -25,7 +26,7 @@ export interface HealthMaterials {
 
 export function collectHealthMaterials(
   readings: GlucoseReading[],
-  events: ScenarioEvent[],
+  events: AppEvent[],
   activity: ActivitySample[],
   therapy: TherapySettings,
   now: number,
@@ -43,7 +44,8 @@ export function collectHealthMaterials(
   const inRange = cgm.filter((r) => r.value >= therapy.targetLow && r.value <= therapy.targetHigh).length;
   const timeInRange = cgm.length ? inRange / cgm.length : null;
 
-  const meals = events.filter((e) => e.to === 'meal' && e.timestamp >= since);
+  // A meal is either the Settings scenario switching to one or the wearer logging one on Home.
+  const meals = events.filter((e) => e.timestamp >= since && (isScenarioEvent(e) ? e.to === 'meal' : e.kind === 'meal'));
   const lastMeal = meals[meals.length - 1];
   let postMealRise: number | null = null;
   if (lastMeal) {

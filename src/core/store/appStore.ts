@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type {
   ActivitySample,
   AlgorithmParameters,
+  AppEvent,
   ConnectionState,
   DeviceInfo,
   DiscoveredDevice,
@@ -18,16 +19,31 @@ import type {
   SimulatorOptions,
   TherapySettings,
   Trend,
+  UserEvent,
+  UserEventKind,
   UserProfile,
   ViewMode,
 } from '../types';
 import { simClock } from '../sim/simClock';
+import { GLUCOSE_AXIS_RANGE, classifyTrend } from '../util/analyte';
 import { newId } from '../util/format';
 
 const MAX_READINGS = 2000;
 /** One sample per simulated minute → two days */
 const MAX_ACTIVITY = 2880;
 const DEFAULT_LIFETIME_DAYS = 15;
+
+/** One tick from the transport, before the glucose calibration is applied. */
+export interface CgmSample {
+  /** Uncalibrated glucose, mg/dL */
+  raw: number;
+  /** Epoch milliseconds */
+  timestamp: number;
+  /** Blood ketone (beta-hydroxybutyrate), mmol/L */
+  ketone: number;
+  /** Blood lactate, mmol/L */
+  lactate: number;
+}
 
 const DEFAULT_ALGORITHM: AlgorithmParameters = {
   calibrationSlope: 1.0,
@@ -53,8 +69,8 @@ export interface AppState {
   scanning: boolean;
 
   readings: GlucoseReading[];
-  /** Scenario switches, oldest first; shown between readings and exported with them */
-  events: ScenarioEvent[];
+  /** Scenario switches and logged user events, oldest first; shown between readings and exported with them */
+  events: AppEvent[];
   /** Activity windows from the ActivityTransport, oldest first */
   activity: ActivitySample[];
   lastReadingAt: number | null;
@@ -83,7 +99,9 @@ export interface AppState {
   updateDevice(deviceId: string, patch: Partial<PairedDevice>): void;
   setAlgorithm(deviceId: string, patch: Partial<AlgorithmParameters>): void;
 
-  addCgmReading(deviceId: string, raw: number, timestamp: number): void;
+  addCgmReading(deviceId: string, sample: CgmSample): void;
+  /** Records a meal/workout/sleep/dose on the event timeline. */
+  logEvent(kind: UserEventKind): void;
   addBgmReading(value: number, timestamp?: number): void;
   addActivitySample(sample: Omit<ActivitySample, 'id'>): void;
   markUploaded(ids: string[]): void;
@@ -115,7 +133,7 @@ const INITIAL = {
   scanning: false,
 
   readings: [] as GlucoseReading[],
-  events: [] as ScenarioEvent[],
+  events: [] as AppEvent[],
   activity: [] as ActivitySample[],
   lastReadingAt: null as number | null,
   uploading: false,
@@ -123,15 +141,15 @@ const INITIAL = {
   lastUploadError: null as string | null,
 };
 
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
 function computeTrend(history: GlucoseReading[], next: number): Trend {
   const ref = history[history.length - 3] ?? history[history.length - 1];
   if (!ref) return 'unknown';
   const perReading = (next - ref.value) / Math.max(1, Math.min(3, history.length));
-  if (perReading > 3) return 'up';
-  if (perReading > 1) return 'upSlight';
-  if (perReading < -3) return 'down';
-  if (perReading < -1) return 'downSlight';
-  return 'flat';
+  return classifyTrend(perReading, GLUCOSE_AXIS_RANGE);
 }
 
 export const useAppStore = create<AppState>()(
@@ -192,7 +210,7 @@ export const useAppStore = create<AppState>()(
           devices: s.devices.map((d) => (d.id === deviceId ? { ...d, algorithm: { ...d.algorithm, ...patch } } : d)),
         })),
 
-      addCgmReading: (deviceId, raw, timestamp) =>
+      addCgmReading: (deviceId, { raw, timestamp, ketone, lactate }) =>
         set((s) => {
           const device = s.devices.find((d) => d.id === deviceId);
           const algo = device?.algorithm ?? DEFAULT_ALGORITHM;
@@ -208,10 +226,19 @@ export const useAppStore = create<AppState>()(
             timestamp,
             raw,
             value,
+            // Ketone and lactate come off their own electrodes, so the glucose
+            // calibration and smoothing window do not apply to them.
+            ketone: round2(ketone),
+            lactate: round2(lactate),
             trend: computeTrend(cgmHistory, value),
             uploaded: false,
           };
           return { readings: [...s.readings, reading].slice(-MAX_READINGS), lastReadingAt: timestamp };
+        }),
+      logEvent: (kind) =>
+        set((s) => {
+          const event: UserEvent = { id: newId(), timestamp: simClock.now(), kind };
+          return { events: [...s.events, event].slice(-MAX_READINGS) };
         }),
       addBgmReading: (value, timestamp = simClock.now()) =>
         set((s) => {

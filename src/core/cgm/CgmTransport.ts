@@ -1,4 +1,4 @@
-import type { ConnectionState, DeviceInfo, DiscoveredDevice, SimulatorOptions } from '../types';
+import type { ConnectionState, DeviceInfo, DiscoveredDevice, SimulatorOptions, UserEventKind } from '../types';
 
 export type Unsubscribe = () => void;
 
@@ -7,6 +7,10 @@ export interface RawReadingEvent {
   timestamp: number;
   /** Uncalibrated glucose, mg/dL */
   raw: number;
+  /** Blood ketone (beta-hydroxybutyrate), mmol/L */
+  ketone: number;
+  /** Blood lactate, mmol/L */
+  lactate: number;
 }
 
 export interface StatusEvent {
@@ -32,5 +36,7 @@ export interface CgmTransport {
   simulator?: {
     setOptions(options: SimulatorOptions): void;
     dropConnection(): void;
+    /** Feeds a logged meal/workout/sleep/dose into the virtual metabolism. */
+    logEvent(kind: UserEventKind): void;
   };
 }

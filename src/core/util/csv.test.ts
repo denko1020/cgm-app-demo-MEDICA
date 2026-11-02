@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import type { GlucoseReading, ScenarioEvent } from '../types';
+import type { AppEvent, GlucoseReading, ScenarioEvent } from '../types';
 import { readingsToCsv } from './csv';
 
 const r = (ts: number, value: number): GlucoseReading => ({ id: `r${ts}`, deviceId: 'd', source: 'cgm', timestamp: ts, raw: value, value, trend: 'flat', uploaded: false });
@@ -18,8 +18,25 @@ test('csv: readings and scenario switches merge into one timeline', () => {
   assert.match(lines[4], /,scenario,.*scenario meal -> normal,e2$/);
 });
 
+test('csv: logged events land on the same timeline as scenario switches', () => {
+  const events: AppEvent[] = [
+    { id: 'e1', timestamp: 1500, kind: 'meal' },
+    { id: 'e2', timestamp: 2500, kind: 'scenario', from: 'normal', to: 'hypo' },
+  ];
+  const lines = readingsToCsv([r(1000, 100), r(2000, 120), r(3000, 130)], events, 'mg/dL').trim().split('\r\n');
+  assert.match(lines[2], /,event,.*,meal,e1$/);
+  assert.match(lines[4], /,scenario,.*scenario normal -> hypo,e2$/);
+});
+
+test('csv: readings carry ketone and lactate', () => {
+  const reading: GlucoseReading = { ...r(1000, 100), ketone: 0.24, lactate: 1.3 };
+  const row = readingsToCsv([reading], [], 'mg/dL').trim().split('\r\n')[1].split(',');
+  assert.equal(row[7], '0.24');
+  assert.equal(row[8], '1.3');
+});
+
 test('csv: the header carries no simulator-only column', () => {
   const header = readingsToCsv([r(1000, 100)], [], 'mg/dL').split('\r\n')[0];
   assert.ok(!header.includes('sim_effect_mgdl'), header);
-  assert.equal(header.split(',').length, 12);
+  assert.equal(header.split(',').length, 14);
 });

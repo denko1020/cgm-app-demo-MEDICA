@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,21 +6,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStrings } from '@/core/i18n';
 import { simClock } from '@/core/sim/simClock';
 import { useAppStore } from '@/core/store/appStore';
-import type { GlucoseReading, ScenarioEvent, SimulatorScenario } from '@/core/types';
+import type { AppEvent, GlucoseReading, ScenarioEvent, SimulatorScenario, UserEvent } from '@/core/types';
+import { isScenarioEvent } from '@/core/types';
+import { analyteSpec, analyteValue, formatAnalyte } from '@/core/util/analyte';
 import { csvFilename, readingsToCsv } from '@/core/util/csv';
 import { exportTextFile } from '@/core/util/exportFile';
-import { formatDateTime, healthIndex, toDisplayUnit, trendArrow } from '@/core/util/format';
+import { formatDateTime, trendArrow } from '@/core/util/format';
 import { Button } from '@/ui/components/Button';
+import { EVENT_COLOR, EVENT_ICON } from '@/ui/eventStyle';
 import { colors, fonts, radius, shadow, spacing } from '@/ui/theme';
 
-type Entry = { kind: 'reading'; ts: number; item: GlucoseReading } | { kind: 'event'; ts: number; item: ScenarioEvent };
+type Entry = { kind: 'reading'; ts: number; item: GlucoseReading } | { kind: 'event'; ts: number; item: AppEvent };
 
 export default function ReadingsScreen() {
   const t = useStrings();
   const readings = useAppStore((s) => s.readings);
   const events = useAppStore((s) => s.events);
   const unit = useAppStore((s) => s.unit);
-  const health = useAppStore((s) => s.viewMode) === 'health';
+  const therapy = useAppStore((s) => s.therapy);
+  const viewMode = useAppStore((s) => s.viewMode);
+  // HbA1c has no per-reading value, so the list falls back to glucose for it.
+  const analyte = viewMode === 'hba1c' ? 'glucose' : viewMode;
+  const spec = analyteSpec(analyte, therapy, unit);
   const addBgm = useAppStore((s) => s.addBgmReading);
   const [showAdd, setShowAdd] = useState(false);
   const [input, setInput] = useState('');
@@ -37,7 +44,7 @@ export default function ReadingsScreen() {
 
   const scenarioLabel = (s: SimulatorScenario) =>
     s === 'meal' ? t.settings.scenarioMeal : s === 'hypo' ? t.settings.scenarioHypo : s === 'hyper' ? t.settings.scenarioHyper : t.settings.scenarioNormal;
-  const eventLabel = (e: ScenarioEvent) => `${t.readings.scenarioChange}: ${scenarioLabel(e.from)} → ${scenarioLabel(e.to)}`;
+  const scenarioText = (e: ScenarioEvent) => `${t.readings.scenarioChange}: ${scenarioLabel(e.from)} → ${scenarioLabel(e.to)}`;
 
   const exportCsv = () => exportTextFile(csvFilename(simClock.now()), readingsToCsv(readings, events, unit));
 
@@ -53,17 +60,30 @@ export default function ReadingsScreen() {
     setShowAdd(false);
   };
 
-  const renderEvent = (e: ScenarioEvent) => (
-    <View style={styles.eventRow}>
-      <Ionicons name="swap-horizontal" size={16} color={colors.textSecondary} />
-      <Text style={styles.eventText}>{eventLabel(e)}</Text>
-      <Text style={styles.eventTime}>{formatDateTime(e.timestamp)}</Text>
-    </View>
-  );
+  const renderEvent = (e: AppEvent) => {
+    const scenario = isScenarioEvent(e);
+    const kind = scenario ? null : (e as UserEvent).kind;
+    const color = kind ? EVENT_COLOR[kind] : colors.textSecondary;
+    return (
+      <View style={styles.eventRow}>
+        {kind ? (
+          <MaterialCommunityIcons name={EVENT_ICON[kind]} size={16} color={color} />
+        ) : (
+          <Ionicons name="swap-horizontal" size={16} color={color} />
+        )}
+        <Text style={[styles.eventText, kind ? { color, fontWeight: '600' } : null]}>
+          {scenario ? scenarioText(e as ScenarioEvent) : t.events[kind as NonNullable<typeof kind>]}
+        </Text>
+        <Text style={styles.eventTime}>{formatDateTime(e.timestamp)}</Text>
+      </View>
+    );
+  };
 
   const renderItem = ({ item }: { item: Entry }) => (item.kind === 'event' ? renderEvent(item.item) : renderReading(item.item));
 
-  const renderReading = (item: GlucoseReading) => (
+  const renderReading = (item: GlucoseReading) => {
+    const value = analyteValue(item, analyte);
+    return (
     <View style={styles.row}>
       <View style={[styles.badge, item.source === 'bgm' && styles.badgeBgm]}>
         <Text style={styles.badgeText}>{item.source === 'cgm' ? t.readings.cgm : t.readings.bgm}</Text>
@@ -77,9 +97,9 @@ export default function ReadingsScreen() {
         ) : null}
       </View>
       <Text style={styles.value}>
-        {health ? healthIndex(item.value) : toDisplayUnit(item.value, unit)} <Text style={styles.unit}>{health ? '%' : unit}</Text>
+        {value === undefined ? '-' : formatAnalyte(value, analyte, unit)} <Text style={styles.unit}>{spec.unit}</Text>
       </Text>
-      <Text style={styles.trend}>{trendArrow(item.trend)}</Text>
+      <Text style={styles.trend}>{analyte === 'glucose' ? trendArrow(item.trend) : ''}</Text>
       <Ionicons
         name={item.uploaded ? 'cloud-done' : 'cloud-outline'}
         size={18}
@@ -87,7 +107,8 @@ export default function ReadingsScreen() {
         style={{ marginLeft: spacing.sm }}
       />
     </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>

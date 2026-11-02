@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, TextInput, View, type ScrollView } from 'react-native';
 
 import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
@@ -20,6 +21,26 @@ export default function SettingsScreen() {
   const t = useStrings();
   const confirm = useConfirm();
   const s = useAppStore();
+  // The profile button on Home links straight here with ?section=profile.
+  const { section } = useLocalSearchParams<{ section?: string }>();
+  const scrollRef = useRef<ScrollView>(null);
+  // State, not a ref: on a first visit the request arrives before the layout,
+  // so the effect has to re-run once the offset is known.
+  const [profileY, setProfileY] = useState<number | null>(null);
+
+  // Runs on focus, and again once the layout reports the offset. A scroll
+  // issued while the tab is still mounting is dropped, so nudge it a couple of
+  // times, unanimated, and only then release the one-shot parameter — clearing
+  // it re-renders the screen, which would cancel a scroll still in flight.
+  useFocusEffect(
+    useCallback(() => {
+      if (section !== 'profile' || profileY === null) return;
+      const y = Math.max(0, profileY - spacing.lg);
+      const timers = [0, 150, 350].map((delay) => setTimeout(() => scrollRef.current?.scrollTo({ y, animated: false }), delay));
+      timers.push(setTimeout(() => router.setParams({ section: undefined }), 500));
+      return () => timers.forEach(clearTimeout);
+    }, [section, profileY]),
+  );
 
   const scenarios: { label: string; value: SimulatorScenario }[] = [
     { label: t.settings.scenarioNormal, value: 'normal' },
@@ -44,7 +65,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <Screen title={t.settings.title}>
+    <Screen title={t.settings.title} scrollRef={scrollRef}>
       <Section title={t.settings.homeScreen}>
         <Row
           label={t.settings.language}
@@ -89,26 +110,28 @@ export default function SettingsScreen() {
         />
       </Section>
 
-      <Section title={t.settings.profileSection}>
-        <TextRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
-        <Row
-          label={t.settings.profileAge}
-          right={<Stepper value={s.profile.age} step={1} min={1} max={120} onChange={(v) => s.setProfile({ age: v })} />}
-        />
-        <Row
-          label={t.settings.profileWeight}
-          right={<Stepper value={s.profile.weightKg} step={1} min={20} max={250} onChange={(v) => s.setProfile({ weightKg: v })} />}
-        />
-        <Row
-          label={t.settings.profileHeight}
-          right={<Stepper value={s.profile.heightCm} step={1} min={100} max={230} onChange={(v) => s.setProfile({ heightCm: v })} />}
-        />
-        <Row
-          label={t.settings.profileGender}
-          last
-          right={<Segmented options={genderOptions} value={s.profile.gender} onChange={(gender) => s.setProfile({ gender })} />}
-        />
-      </Section>
+      <View onLayout={(e) => setProfileY((prev) => (prev === e.nativeEvent.layout.y ? prev : e.nativeEvent.layout.y))}>
+        <Section title={t.settings.profileSection}>
+          <TextRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
+          <Row
+            label={t.settings.profileAge}
+            right={<Stepper value={s.profile.age} step={1} min={1} max={120} onChange={(v) => s.setProfile({ age: v })} />}
+          />
+          <Row
+            label={t.settings.profileWeight}
+            right={<Stepper value={s.profile.weightKg} step={1} min={20} max={250} onChange={(v) => s.setProfile({ weightKg: v })} />}
+          />
+          <Row
+            label={t.settings.profileHeight}
+            right={<Stepper value={s.profile.heightCm} step={1} min={100} max={230} onChange={(v) => s.setProfile({ heightCm: v })} />}
+          />
+          <Row
+            label={t.settings.profileGender}
+            last
+            right={<Segmented options={genderOptions} value={s.profile.gender} onChange={(gender) => s.setProfile({ gender })} />}
+          />
+        </Section>
+      </View>
 
       <Section title={t.settings.emergencyContacts} footer={t.settings.emergencyFixed}>
         {s.emergencyContacts.map((c, i) => (

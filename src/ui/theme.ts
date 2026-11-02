@@ -14,6 +14,14 @@ export const colors = {
   gray: '#ACA79B',
   orange: '#F59E0B',
   greenSoft: '#DCFCE7',
+  indigo: '#6366F1',
+  violet: '#7C3AED',
+  /** Trend indicator: muted red rising, muted blue falling, grey steady — from the design. */
+  trendRise: '#C0504D',
+  trendFall: '#5B8DB8',
+  trendFlat: '#8A857C',
+  /** The faint chevrons the trend has not reached yet. */
+  trendIdle: '#CFCAC1',
 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
@@ -27,6 +35,14 @@ export const shadow = {
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
+  },
+  /** Tighter, more defined lift for the white controls that sit on a card. */
+  raised: {
+    shadowColor: '#3A3226',
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    shadowOffset: { width: 1, height: 2 },
+    elevation: 3,
   },
 } as const;
 

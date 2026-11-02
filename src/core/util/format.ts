@@ -11,19 +11,6 @@ export function toDisplayUnit(mgdl: number, unit: GlucoseUnit): string {
   return String(Math.round(mgdl));
 }
 
-/** Satiety index (%): the chart range 40–300 mg/dL mapped linearly onto 0–100 %. */
-export const INDEX_GLUCOSE_MIN = 40;
-export const INDEX_GLUCOSE_MAX = 300;
-export function satietyIndex(mgdl: number): number {
-  const pct = ((mgdl - INDEX_GLUCOSE_MIN) / (INDEX_GLUCOSE_MAX - INDEX_GLUCOSE_MIN)) * 100;
-  return Math.round(Math.min(100, Math.max(0, pct)));
-}
-
-/** Health index (%) = 100 − satiety index, so lower glucose reads as a higher score. */
-export function healthIndex(mgdl: number): number {
-  return 100 - satietyIndex(mgdl);
-}
-
 export function formatTime(ts: number): string {
   const d = new Date(ts);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -39,9 +26,12 @@ export function daysBetween(fromTs: number, toTs: number): number {
   return (toTs - fromTs) / 86_400_000;
 }
 
+/** The familiar CGM notation: doubled arrows for the fastest moves. */
 export function trendArrow(trend: Trend): string {
   switch (trend) {
     case 'up':
+      return '⇈';
+    case 'upModerate':
       return '↑';
     case 'upSlight':
       return '↗';
@@ -49,11 +39,20 @@ export function trendArrow(trend: Trend): string {
       return '→';
     case 'downSlight':
       return '↘';
-    case 'down':
+    case 'downModerate':
       return '↓';
+    case 'down':
+      return '⇊';
     default:
       return '·';
   }
+}
+
+/** Date stamp for the Live Data panel, e.g. "2026-11-02 (Mon)". */
+export function formatDateLabel(ts: number, locale: string): string {
+  const d = new Date(ts);
+  const weekday = d.toLocaleDateString(locale, { weekday: 'short' });
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} (${weekday})`;
 }
 
 function pad(n: number): string {

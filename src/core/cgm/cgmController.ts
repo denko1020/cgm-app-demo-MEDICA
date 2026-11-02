@@ -1,6 +1,6 @@
 import { simClock } from '../sim/simClock';
 import { useAppStore, selectPendingUploads } from '../store/appStore';
-import type { SimulatorOptions } from '../types';
+import type { SimulatorOptions, UserEventKind } from '../types';
 import { MockUploadService } from '../upload/UploadService';
 import type { CgmTransport } from './CgmTransport';
 import { createTransport } from './createTransport';
@@ -22,7 +22,7 @@ class CgmController {
     const store = useAppStore;
 
     this.transport.onReading((e) => {
-      store.getState().addCgmReading(e.deviceId, e.raw, e.timestamp);
+      store.getState().addCgmReading(e.deviceId, { raw: e.raw, timestamp: e.timestamp, ketone: e.ketone, lactate: e.lactate });
       this.scheduleAutoUpload();
     });
     this.transport.onStatus((e) => {
@@ -54,6 +54,15 @@ class CgmController {
     };
     if (store.persist.hasHydrated()) restore();
     else store.persist.onFinishHydration(restore);
+  }
+
+  /**
+   * Logs a meal, workout, sleep or dose: it goes on the event timeline and
+   * into the virtual metabolism, so the curve answers the way a body would.
+   */
+  logEvent(kind: UserEventKind) {
+    useAppStore.getState().logEvent(kind);
+    this.transport.simulator?.logEvent(kind);
   }
 
   startScan() {

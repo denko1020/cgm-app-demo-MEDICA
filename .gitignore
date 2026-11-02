@@ -40,3 +40,13 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# playwright debug output
+.playwright-mcp/
+
+# local design references / working notes (not app assets)
+/@design/
+/@Prompt_CGMS MobileAPP_2026.txt
+/dials.png
+/dials2.png
+/v2-*.png

@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, RefObject } from 'react';
 import { ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,9 +10,11 @@ interface ScreenProps extends PropsWithChildren {
   headerRight?: React.ReactNode;
   scroll?: boolean;
   contentStyle?: ViewStyle;
+  /** Handle on the scroll view, so a screen can jump to one of its sections. */
+  scrollRef?: RefObject<ScrollView | null>;
 }
 
-export function Screen({ title, headerRight, scroll = true, contentStyle, children }: ScreenProps) {
+export function Screen({ title, headerRight, scroll = true, contentStyle, scrollRef, children }: ScreenProps) {
   const header = title ? (
     <View style={styles.titleRow}>
       <Text style={styles.title}>{title}</Text>
@@ -30,7 +32,7 @@ export function Screen({ title, headerRight, scroll = true, contentStyle, childr
   }
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled">
         {header}
         {children}
       </ScrollView>

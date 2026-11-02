@@ -1,4 +1,4 @@
-import type { DeviceInfo, DiscoveredDevice, SimulatorOptions } from '../types';
+import type { DeviceInfo, DiscoveredDevice, SimulatorOptions, UserEventKind } from '../types';
 import type { CgmTransport, RawReadingEvent, StatusEvent, Unsubscribe } from './CgmTransport';
 import { GlucoseModel } from './glucoseModel';
 
@@ -37,6 +37,9 @@ export class SimulatedTransport implements CgmTransport {
       // Paused: keep the link up but stop emitting until resumed.
       if (options.paused) this.stopTicking();
       else this.startTicking();
+    },
+    logEvent: (kind: UserEventKind) => {
+      this.model.logEvent(kind);
     },
     dropConnection: () => {
       if (!this.connectedId) return;
@@ -105,7 +108,8 @@ export class SimulatedTransport implements CgmTransport {
   private emitReading() {
     if (!this.connectedId) return;
     this.tick += 1;
-    const glucose = this.model.next(this.options.scenario, this.options.intervalSec / 60);
+    this.model.next(this.options.scenario, this.options.intervalSec / 60);
+    const { glucose, ketone, lactate } = this.model.sample;
     if (this.tick % 50 === 0 && this.battery > 0) {
       this.battery -= 1;
       this.emitStatus(this.connectedId, 'connected');
@@ -114,6 +118,8 @@ export class SimulatedTransport implements CgmTransport {
       deviceId: this.connectedId,
       timestamp: this.now(),
       raw: Math.round(glucose),
+      ketone,
+      lactate,
     };
     this.readingListeners.forEach((l) => l(event));
   }
