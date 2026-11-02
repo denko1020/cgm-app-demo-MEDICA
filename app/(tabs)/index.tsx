@@ -173,7 +173,9 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {!hba1c && latest ? <TrendTile trend={trend} size={66} /> : null}
+          <View style={styles.trendSlot}>
+            {!hba1c && latest ? <TrendTile trend={trend} size={66} /> : null}
+          </View>
 
           <View style={styles.actions}>
             <View style={styles.eventGrid}>
@@ -276,7 +278,10 @@ const styles = StyleSheet.create({
   liveDate: { ...fonts.footnote, color: colors.textSecondary },
   // Readout, trend dial and action column sit side by side, as in the design.
   cardBody: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm },
-  readout: { flex: 1 },
+  readout: { flexShrink: 1 },
+  // Takes the leftover width between the readout and the action column, so the
+  // trend dial centers in that gap instead of sitting flush against the buttons.
+  trendSlot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   // The design frames the status and the value together, with the timestamp loose underneath.
   valueBox: {
     alignSelf: 'flex-start',

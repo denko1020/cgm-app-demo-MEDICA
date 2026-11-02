@@ -64,6 +64,9 @@ const LIT: Record<Trend, number> = {
 const RISING: Trend[] = ['up', 'upModerate', 'upSlight'];
 const FALLING: Trend[] = ['down', 'downModerate', 'downSlight'];
 
+/** Width of the outermost chevron's replacement tip, in viewBox units. */
+const TIP_W = 18;
+
 function tintFor(trend: Trend): string {
   if (RISING.includes(trend)) return colors.trendRise;
   if (FALLING.includes(trend)) return colors.trendFall;
@@ -89,19 +92,38 @@ export function TrendTile({ trend, size = 56 }: Props) {
   const lit = LIT[trend];
   const rising = RISING.includes(trend);
 
+  /** Straight up (12 o'clock) or straight down (6 o'clock): the two exact-clock states. */
+  const pointingClock = trend === 'up' || trend === 'down';
+
   /** One chevron. `below` mirrors the band onto the underside of the ring. */
   const chevron = (index: number, below: boolean) => {
     const { w, base, apex } = WAVES[index];
+    const isLit = index < lit && below !== rising;
+    const fill = isLit ? tint : colors.trendIdle;
+
+    // At 12/6 o'clock, the outermost band becomes a small triangle whose
+    // point touches the artwork's edge instead of a curved chevron.
+    if (index === WAVES.length - 1 && pointingClock) {
+      const baseY = below ? VB_H - base : base;
+      const tipY = below ? VB_H : 0;
+      return (
+        <Path
+          key={`${below ? 'd' : 'u'}${index}`}
+          d={`M${CX - TIP_W / 2} ${baseY} L${CX + TIP_W / 2} ${baseY} L${CX} ${tipY} Z`}
+          fill={fill}
+        />
+      );
+    }
+
     // A quadratic peaks halfway to its control point, so aim the control twice as far.
     const y = below ? VB_H - base : base;
     const control = below ? VB_H - (2 * apex - base) : 2 * apex - base;
     const x0 = CX - w / 2;
-    const isLit = index < lit && below !== rising;
     return (
       <Path
         key={`${below ? 'd' : 'u'}${index}`}
         d={`M${x0} ${y} Q${CX} ${control} ${x0 + w} ${y}`}
-        stroke={isLit ? tint : colors.trendIdle}
+        stroke={fill}
         strokeWidth={CHEVRON_STROKE}
         strokeLinecap="round"
         fill="none"
