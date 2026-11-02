@@ -1,0 +1,19 @@
+{
+  "id": "/cgm-app-demo-MEDICA/",
+  "name": "CGM Test Logger — Medica",
+  "short_name": "OHC CGM",
+  "description": "OHC CGM demo app for MEDICA",
+  "start_url": "/cgm-app-demo-MEDICA/",
+  "scope": "/cgm-app-demo-MEDICA/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
+  "background_color": "#070B14",
+  "theme_color": "#FFFFFF",
+  "lang": "ko",
+  "icons": [
+    { "src": "/cgm-app-demo-MEDICA/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/cgm-app-demo-MEDICA/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/cgm-app-demo-MEDICA/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

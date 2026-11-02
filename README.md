@@ -37,6 +37,13 @@ npm run deploy:web   # 예비 수단: 로컬에서 export 해 gh-pages 브랜치
 
 `scripts/deploy-web.mjs`는 Actions를 쓸 수 없을 때의 예비 경로임. Pages 소스가 Actions인 동안은 gh-pages 브랜치 푸시만으로는 반영되지 않으므로, 이 경로로 돌아가려면 리포 설정에서 Pages 소스를 gh-pages 브랜치로 되돌려야 함.
 
+## 홈 화면 아이콘 · 전체화면 실행 (영업사원 배포용)
+
+`public/manifest.webmanifest`(PWA, `display: fullscreen`)와 `public/index.html`(iOS 홈 화면 메타 태그)이 들어 있어, 휴대폰에서 홈 화면에 추가하면 아이콘으로 열리고 브라우저 주소창 없이 실행됨. 아이콘 원본은 `assets/icon-source.svg`이며 `public/icons/`의 PNG는 여기서 만든 것임.
+
+- **Android (Chrome)**: 주소 접속 → 우측 상단 ⋮ → 「홈 화면에 추가」 또는 「앱 설치」. 상태바까지 숨긴 완전 전체화면으로 열림
+- **iPhone (Safari)**: 주소 접속 → 하단 공유 버튼 → 「홈 화면에 추가」. 주소창 없이 열리며, iOS 정책상 시계·배터리 상태바는 남음
+
 ## 화면 구성
 
 | 탭 | 기능 |

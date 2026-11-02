@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- App icon (design D): dark background, blue blood drop with a CGM trace, OHC wordmark.
+       All artwork sits inside the central 80% circle so maskable crops keep it intact. -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#16233D"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </radialGradient>
+    <linearGradient id="drop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4DA3FF"/>
+      <stop offset="1" stop-color="#0064F0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#0064F0" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#0064F0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="450" r="330" fill="url(#glow)"/>
+
+  <!-- blood drop -->
+  <path d="M512 196
+           C 512 196, 342 398, 342 520
+           A 170 170 0 0 0 682 520
+           C 682 398, 512 196, 512 196 Z"
+        fill="url(#drop)"/>
+  <!-- highlight -->
+  <path d="M424 500 C 424 452, 452 404, 480 366"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- CGM trace across the drop -->
+  <polyline points="300,560 400,560 440,560 470,470 510,640 548,520 578,560 724,560"
+            fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- wordmark -->
+  <text x="512" y="826" text-anchor="middle"
+        font-family="Inter, DejaVu Sans, sans-serif" font-weight="800" font-size="104"
+        letter-spacing="18" fill="#FFFFFF">OHC</text>
+</svg>
