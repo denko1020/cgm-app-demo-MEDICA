@@ -24,14 +24,20 @@ const RING_STROKE = 10;
 const CHEVRON_STROKE = 8;
 
 /**
- * Chevron bands above the ring, innermost first. `base` is where the arc's ends
- * sit and `apex` its peak, both on the centre line. Mirrored below the ring.
+ * The arc bands above the ring, innermost first. `base` is where the arc's ends
+ * sit and `apex` its peak, both on the centre line. Mirrored under the ring.
+ *
+ * On the centre line the two strokes clear each other by 7. Both sit further
+ * out than the artwork they came from, which opens a gap of 5 for the tip
+ * beyond them without pushing it off the box.
  */
-const WAVES = [
-  { w: 71, base: 39, apex: 28 },
-  { w: 50, base: 20, apex: 13 },
-  { w: 36, base: 5, apex: 3 },
+const ARCS = [
+  { w: 71, base: 44, apex: 33 },
+  { w: 50, base: 25, apex: 18 },
 ];
+
+/** One tip plus the arcs: how many bands stack on each side of the ring. */
+const BANDS = ARCS.length + 1;
 
 /**
  * Clock position of the needle for each state, as an SVG rotation where 0 points
@@ -61,13 +67,16 @@ const LIT: Record<Trend, number> = {
   unknown: 0,
 };
 
+const BAND_INDEXES = Array.from({ length: BANDS }, (_, i) => i);
+
 const RISING: Trend[] = ['up', 'upModerate', 'upSlight'];
 const FALLING: Trend[] = ['down', 'downModerate', 'downSlight'];
 
 /**
- * The triangle that replaces the outermost band at 12/6 o'clock, in viewBox
- * units. It fills the same slot as that band — base where the band's stroke
- * ended, point on the artwork's edge — so the stack keeps its spacing.
+ * The triangle that stands in for the outermost band, in viewBox units: base at
+ * TIP_BASE, point on the artwork's edge. Its gap to the arc below reads as part
+ * of the same stack, so keep it under the 7 between the arcs — wider and the
+ * tip looks detached from the dial.
  */
 const TIP_W = 24;
 const TIP_BASE = 9;
@@ -97,18 +106,13 @@ export function TrendTile({ trend, size = 56 }: Props) {
   const lit = LIT[trend];
   const rising = RISING.includes(trend);
 
-  /** Straight up (12 o'clock) or straight down (6 o'clock): the two exact-clock states. */
-  const pointingClock = trend === 'up' || trend === 'down';
-
-  /** One chevron. `below` mirrors the band onto the underside of the ring. */
+  /** One band. `below` mirrors it onto the underside of the ring. */
   const chevron = (index: number, below: boolean) => {
-    const { w, base, apex } = WAVES[index];
     const isLit = index < lit && below !== rising;
     const fill = isLit ? tint : colors.trendIdle;
 
-    // At 12/6 o'clock, the outermost band becomes a small triangle whose
-    // point touches the artwork's edge instead of a curved chevron.
-    if (index === WAVES.length - 1 && pointingClock) {
+    // The outermost band is a small triangle pointing outwards, not an arc.
+    if (index === ARCS.length) {
       const baseY = below ? VB_H - TIP_BASE : TIP_BASE;
       const tipY = below ? VB_H : 0;
       return (
@@ -121,6 +125,7 @@ export function TrendTile({ trend, size = 56 }: Props) {
     }
 
     // A quadratic peaks halfway to its control point, so aim the control twice as far.
+    const { w, base, apex } = ARCS[index];
     const y = below ? VB_H - base : base;
     const control = below ? VB_H - (2 * apex - base) : 2 * apex - base;
     const x0 = CX - w / 2;
@@ -138,14 +143,14 @@ export function TrendTile({ trend, size = 56 }: Props) {
 
   return (
     <Svg width={size} height={(size * VB_H) / VB_W} viewBox={`0 0 ${VB_W} ${VB_H}`}>
-      {WAVES.map((_, i) => chevron(i, false))}
+      {BAND_INDEXES.map((i) => chevron(i, false))}
       <Circle cx={CX} cy={CY} r={R} stroke={tint} strokeWidth={RING_STROKE} fill="none" />
       {angle === null ? (
         [-22, 0, 22].map((dx) => <Circle key={dx} cx={CX + dx} cy={CY} r={8} fill={tint} />)
       ) : (
         <Path d={NEEDLE} fill={tint} transform={`rotate(${angle} ${CX} ${CY})`} />
       )}
-      {WAVES.map((_, i) => chevron(i, true))}
+      {BAND_INDEXES.map((i) => chevron(i, true))}
     </Svg>
   );
 }
