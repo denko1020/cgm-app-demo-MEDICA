@@ -3,6 +3,15 @@ import type { SimulatorScenario, UserEventKind } from '../types';
 export const BASELINE = 105;
 const MEAL_TICKS = 40;
 
+/**
+ * Slow wander of the resting baseline, in mg/dL at the crest. A real wearer's
+ * glucose breathes between meals rather than sitting on one number, so the
+ * trace gets two out-of-phase cycles — the longer one carries most of the
+ * movement, the shorter one keeps it from reading as a clean sine.
+ */
+const DRIFT = 8;
+const DRIFT_PERIOD_MIN = 95;
+
 /** One pass of the virtual sensor: every analyte it reports for the same instant. */
 export interface SensorSample {
   /** mg/dL */
@@ -34,6 +43,8 @@ export interface GlucoseModelOptions {
   /** Random source in [0, 1); inject a seeded one in tests for deterministic traces */
   random?: () => number;
   noiseSd?: number;
+  /** Crest of the baseline wander, in mg/dL. Set to 0 to isolate a scenario in tests. */
+  drift?: number;
 }
 
 /**
@@ -52,12 +63,16 @@ export class GlucoseModel {
   private mealTick = 0;
   private lastScenario: SimulatorScenario = 'normal';
   private impulses: Impulse[] = [];
+  /** Simulated minutes since the model started, which drives the baseline wander. */
+  private minutes = 0;
   private readonly random: () => number;
   private readonly noiseSd: number;
+  private readonly drift: number;
 
   constructor(opts: GlucoseModelOptions = {}) {
     this.random = opts.random ?? Math.random;
     this.noiseSd = opts.noiseSd ?? 2.5;
+    this.drift = opts.drift ?? DRIFT;
   }
 
   /** Everything the sensor reports for the latest tick. */
@@ -75,6 +90,7 @@ export class GlucoseModel {
   }
 
   next(scenario: SimulatorScenario, dtMin: number): number {
+    this.minutes += dtMin;
     if (scenario !== this.lastScenario) {
       if (scenario === 'meal') this.mealTick = 0;
       this.lastScenario = scenario;
@@ -91,15 +107,20 @@ export class GlucoseModel {
     }
 
     const { offset, intensity } = this.advanceImpulses();
-    target += offset;
+    target += offset + this.baselineDrift();
 
-    // dtMin is kept in the signature so a future model can use a real time step.
-    void dtMin;
     const next = this.glucose + (target - this.glucose) * 0.12 + this.gaussianNoise(this.noiseSd);
     this.glucose = Math.max(39, Math.min(401, next));
     this.advanceKetone(intensity);
     this.advanceLactate(intensity);
     return this.glucose;
+  }
+
+  /** Where the slow wander stands right now, in mg/dL off the target. */
+  private baselineDrift(): number {
+    const long = Math.sin((2 * Math.PI * this.minutes) / DRIFT_PERIOD_MIN);
+    const short = Math.sin((2 * Math.PI * this.minutes) / (DRIFT_PERIOD_MIN / 2.7) + 1.1);
+    return this.drift * (0.7 * long + 0.3 * short);
   }
 
   /**
