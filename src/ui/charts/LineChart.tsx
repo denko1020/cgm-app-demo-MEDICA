@@ -1,6 +1,6 @@
 import Svg, { Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
-import { colors } from '../theme';
+import { useColors } from '../theme';
 
 export interface LineSeries {
   values: number[];
@@ -63,6 +63,7 @@ export function LineChart({
   areaBetween,
   markers = [],
 }: LineChartProps) {
+  const c = useColors();
   const padL = padLeft ?? (yLabel ? 44 : 30);
   const padR = 8;
   const padT = 8;
@@ -138,24 +139,24 @@ export function LineChart({
         )}
       </Defs>
       {band ? (
-        <Rect x={padL} y={y(band.to)} width={plotW} height={Math.max(0, y(band.from) - y(band.to))} fill={band.color ?? colors.greenSoft} />
+        <Rect x={padL} y={y(band.to)} width={plotW} height={Math.max(0, y(band.from) - y(band.to))} fill={band.color ?? c.greenSoft} />
       ) : null}
       {areaBetween && series[areaBetween.a] && series[areaBetween.b] ? (
         <Path d={areaPath(series[areaBetween.a].values, series[areaBetween.b].values)} fill={areaBetween.color} fillOpacity={areaBetween.opacity ?? 0.6} />
       ) : null}
-      {zeroLine && lo <= 0 && hi >= 0 ? <Line x1={padL} y1={y(0)} x2={padL + plotW} y2={y(0)} stroke={colors.textTertiary} strokeWidth={1} strokeDasharray="2 2" /> : null}
+      {zeroLine && lo <= 0 && hi >= 0 ? <Line x1={padL} y1={y(0)} x2={padL + plotW} y2={y(0)} stroke={c.textTertiary} strokeWidth={1} strokeDasharray="2 2" /> : null}
       {yTicks.map((t) => (
-        <SvgText key={t} x={padL - 4} y={y(t) + 4} fontSize={9} fill={colors.textSecondary} textAnchor="end">
+        <SvgText key={t} x={padL - 4} y={y(t) + 4} fontSize={9} fill={c.textSecondary} textAnchor="end">
           {yTickFormat ? yTickFormat(t) : t}
         </SvgText>
       ))}
       {yLabel ? (
-        <SvgText x={10} y={padT + plotH / 2} fontSize={9} fill={colors.textSecondary} textAnchor="middle" transform={`rotate(-90 10 ${padT + plotH / 2})`}>
+        <SvgText x={10} y={padT + plotH / 2} fontSize={9} fill={c.textSecondary} textAnchor="middle" transform={`rotate(-90 10 ${padT + plotH / 2})`}>
           {yLabel}
         </SvgText>
       ) : null}
-      <Line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.separator} strokeWidth={1} />
-      <Line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.separator} strokeWidth={1} />
+      <Line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={c.separator} strokeWidth={1} />
+      <Line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={c.separator} strokeWidth={1} />
       {series.map((s, idx) => {
         if (!s.areaFill) return null;
         const linePath = s.smooth ? toSmoothPath(s.values) : toPath(s.values);
@@ -184,12 +185,12 @@ export function LineChart({
         );
       })}
       {markers.map((m, i) => (
-        <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? colors.orange} strokeWidth={1} strokeDasharray="3 2" />
+        <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? c.orange} strokeWidth={1} strokeDasharray="3 2" />
       ))}
       {markers
         .filter((m) => m.label)
         .map((m, i) => (
-          <SvgText key={`ml${i}`} x={Math.min(x(m.index) + 3, padL + plotW - 2)} y={padT + 9} fontSize={8} fill={m.color ?? colors.orange} textAnchor="start">
+          <SvgText key={`ml${i}`} x={Math.min(x(m.index) + 3, padL + plotW - 2)} y={padT + 9} fontSize={8} fill={m.color ?? c.orange} textAnchor="start">
             {m.label}
           </SvgText>
         ))}
@@ -199,7 +200,7 @@ export function LineChart({
           x={padL + (i / Math.max(1, xLabels.length - 1)) * plotW}
           y={height - 6}
           fontSize={9}
-          fill={colors.textSecondary}
+          fill={c.textSecondary}
           textAnchor="middle"
         >
           {label}

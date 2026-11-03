@@ -2,7 +2,7 @@ import type { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { UserEventKind } from '@/core/types';
 
-import { colors } from './theme';
+import type { Colors } from './theme';
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -18,10 +18,12 @@ export const EVENT_ICON: Record<UserEventKind, IconName> = {
   medication: 'pill',
 };
 
-/** One colour per event kind, shared by the Home buttons, the chart markers and the Readings list. */
-export const EVENT_COLOR: Record<UserEventKind, string> = {
-  exercise: colors.green,
-  meal: colors.orange,
-  sleep: colors.indigo,
-  medication: colors.violet,
-};
+/** One colour per event kind, shared by the chart markers and the Readings list. */
+export function eventColors(c: Colors): Record<UserEventKind, string> {
+  return {
+    exercise: c.green,
+    meal: c.orange,
+    sleep: c.indigo,
+    medication: c.violet,
+  };
+}

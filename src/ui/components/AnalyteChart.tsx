@@ -6,8 +6,8 @@ import { isScenarioEvent } from '@/core/types';
 import { analyteSpec, analyteValue } from '@/core/util/analyte';
 import { formatTime } from '@/core/util/format';
 import { LineChart, type ChartMarker } from '@/ui/charts/LineChart';
-import { EVENT_COLOR } from '@/ui/eventStyle';
-import { colors } from '@/ui/theme';
+import { eventColors } from '@/ui/eventStyle';
+import { useColors } from '@/ui/theme';
 
 interface Props {
   width: number;
@@ -30,6 +30,7 @@ const PAD_L = 44;
  */
 export function AnalyteChart({ width, readings, events, therapy, analyte, unit }: Props) {
   const t = useStrings();
+  const c = useColors();
   const spec = analyteSpec(analyte, therapy, unit);
 
   const data = useMemo(() => {
@@ -45,11 +46,11 @@ export function AnalyteChart({ width, readings, events, therapy, analyte, unit }
       .map((e) => {
         let index = tail.findIndex((r) => r.timestamp >= e.timestamp);
         if (index < 0) index = tail.length - 1;
-        if (isScenarioEvent(e)) return { index, color: colors.orange, label: scenarioLabel(e.to, t) };
-        return { index, color: EVENT_COLOR[e.kind], label: t.events[e.kind] };
+        if (isScenarioEvent(e)) return { index, color: c.orange, label: scenarioLabel(e.to, t) };
+        return { index, color: eventColors(c)[e.kind], label: t.events[e.kind] };
       });
     return { tail, values, markers };
-  }, [readings, events, analyte, t]);
+  }, [readings, events, analyte, t, c]);
 
   if (data.tail.length < 2) return null;
 
@@ -58,15 +59,15 @@ export function AnalyteChart({ width, readings, events, therapy, analyte, unit }
   const nearLowCutoff = spec.low * 1.05;
   const colorForValue =
     analyte === 'glucose'
-      ? (v: number) => (v < spec.low ? colors.red : v < nearLowCutoff ? colors.orange : colors.primary)
-      : (v: number) => (v > spec.high ? colors.red : colors.primary);
+      ? (v: number) => (v < spec.low ? c.red : v < nearLowCutoff ? c.orange : c.primary)
+      : (v: number) => (v > spec.high ? c.red : c.primary);
 
   return (
     <LineChart
       width={width}
       height={180}
       padLeft={PAD_L}
-      series={[{ values: data.values, color: colors.primary, width: 3, smooth: true, areaFill: true, colorForValue }]}
+      series={[{ values: data.values, color: c.primary, width: 3, smooth: true, areaFill: true, colorForValue }]}
       band={{ from: spec.low, to: spec.high }}
       yMin={spec.yMin}
       yMax={spec.yMax}

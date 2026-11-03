@@ -13,13 +13,15 @@ import { csvFilename, readingsToCsv } from '@/core/util/csv';
 import { exportTextFile } from '@/core/util/exportFile';
 import { formatDateTime, trendArrow } from '@/core/util/format';
 import { Button } from '@/ui/components/Button';
-import { EVENT_COLOR, EVENT_ICON } from '@/ui/eventStyle';
-import { colors, fonts, radius, shadow, spacing } from '@/ui/theme';
+import { EVENT_ICON, eventColors } from '@/ui/eventStyle';
+import { createStyles, fonts, radius, shadow, spacing, useColors } from '@/ui/theme';
 
 type Entry = { kind: 'reading'; ts: number; item: GlucoseReading } | { kind: 'event'; ts: number; item: AppEvent };
 
 export default function ReadingsScreen() {
   const t = useStrings();
+  const c = useColors();
+  const styles = useStyles();
   const readings = useAppStore((s) => s.readings);
   const events = useAppStore((s) => s.events);
   const unit = useAppStore((s) => s.unit);
@@ -63,7 +65,7 @@ export default function ReadingsScreen() {
   const renderEvent = (e: AppEvent) => {
     const scenario = isScenarioEvent(e);
     const kind = scenario ? null : (e as UserEvent).kind;
-    const color = kind ? EVENT_COLOR[kind] : colors.textSecondary;
+    const color = kind ? eventColors(c)[kind] : c.textSecondary;
     return (
       <View style={styles.eventRow}>
         {kind ? (
@@ -103,7 +105,7 @@ export default function ReadingsScreen() {
       <Ionicons
         name={item.uploaded ? 'cloud-done' : 'cloud-outline'}
         size={18}
-        color={item.uploaded ? colors.green : colors.textTertiary}
+        color={item.uploaded ? c.green : c.textTertiary}
         style={{ marginLeft: spacing.sm }}
       />
     </View>
@@ -116,10 +118,10 @@ export default function ReadingsScreen() {
         <Text style={styles.title}>{t.readings.title}</Text>
         <View style={styles.actions}>
           <Pressable onPress={exportCsv} hitSlop={8} disabled={readings.length === 0} accessibilityLabel={t.readings.exportCsv} testID="export-csv">
-            <Ionicons name="download-outline" size={26} color={readings.length ? colors.primary : colors.textTertiary} />
+            <Ionicons name="download-outline" size={26} color={readings.length ? c.primary : c.textTertiary} />
           </Pressable>
           <Pressable onPress={() => setShowAdd(true)} hitSlop={8} accessibilityLabel={t.readings.addBgm}>
-            <Ionicons name="add" size={28} color={colors.primary} />
+            <Ionicons name="add" size={28} color={c.primary} />
           </Pressable>
         </View>
       </View>
@@ -156,56 +158,58 @@ export default function ReadingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: 40,
-    paddingBottom: spacing.md,
-  },
-  title: { ...fonts.largeTitle, color: colors.text },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  list: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.separator,
-    ...shadow.card,
-  },
-  listEmpty: { flexGrow: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 12, backgroundColor: colors.card },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginLeft: spacing.lg },
-  badge: { backgroundColor: colors.primarySoft, borderRadius: radius.sm, paddingHorizontal: 6, paddingVertical: 2, marginRight: spacing.md, minWidth: 44, alignItems: 'center' },
-  badgeBgm: { backgroundColor: colors.greenSoft },
-  badgeText: { ...fonts.caption, fontWeight: '600', color: colors.text },
-  time: { ...fonts.footnote, color: colors.text },
-  raw: { ...fonts.caption, color: colors.textTertiary },
-  eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: 8, backgroundColor: colors.background },
-  eventText: { ...fonts.footnote, color: colors.textSecondary, flex: 1 },
-  eventTime: { ...fonts.caption, color: colors.textTertiary },
-  value: { ...fonts.body, fontWeight: '600', color: colors.text },
-  unit: { ...fonts.caption, color: colors.textSecondary, fontWeight: '400' },
-  trend: { ...fonts.body, color: colors.textSecondary, marginLeft: spacing.sm, width: 20, textAlign: 'center' },
-  empty: { ...fonts.body, color: colors.textTertiary, textAlign: 'center', marginTop: spacing.xl },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
-  dialog: { width: 300, backgroundColor: colors.background, borderRadius: radius.xl, paddingVertical: spacing.lg, ...shadow.card },
-  dialogTitle: { ...fonts.body, fontWeight: '600', textAlign: 'center' },
-  dialogHint: { ...fonts.footnote, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xs, paddingHorizontal: spacing.lg },
-  input: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.separator,
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 20,
-    textAlign: 'center',
-  },
-  error: { ...fonts.footnote, color: colors.red, textAlign: 'center', marginTop: spacing.sm },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: 40,
+      paddingBottom: spacing.md,
+    },
+    title: { ...fonts.largeTitle, color: c.text },
+    actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+    list: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.sm,
+      backgroundColor: c.card,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.separator,
+      ...shadow.card,
+    },
+    listEmpty: { flexGrow: 1 },
+    row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 12, backgroundColor: c.card },
+    separator: { height: StyleSheet.hairlineWidth, backgroundColor: c.separator, marginLeft: spacing.lg },
+    badge: { backgroundColor: c.primarySoft, borderRadius: radius.sm, paddingHorizontal: 6, paddingVertical: 2, marginRight: spacing.md, minWidth: 44, alignItems: 'center' },
+    badgeBgm: { backgroundColor: c.greenSoft },
+    badgeText: { ...fonts.caption, fontWeight: '600', color: c.text },
+    time: { ...fonts.footnote, color: c.text },
+    raw: { ...fonts.caption, color: c.textTertiary },
+    eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: 8, backgroundColor: c.background },
+    eventText: { ...fonts.footnote, color: c.textSecondary, flex: 1 },
+    eventTime: { ...fonts.caption, color: c.textTertiary },
+    value: { ...fonts.body, fontWeight: '600', color: c.text },
+    unit: { ...fonts.caption, color: c.textSecondary, fontWeight: '400' },
+    trend: { ...fonts.body, color: c.textSecondary, marginLeft: spacing.sm, width: 20, textAlign: 'center' },
+    empty: { ...fonts.body, color: c.textTertiary, textAlign: 'center', marginTop: spacing.xl },
+    backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
+    dialog: { width: 300, backgroundColor: c.background, borderRadius: radius.xl, paddingVertical: spacing.lg, ...shadow.card },
+    dialogTitle: { ...fonts.body, fontWeight: '600', textAlign: 'center' },
+    dialogHint: { ...fonts.footnote, color: c.textSecondary, textAlign: 'center', marginTop: spacing.xs, paddingHorizontal: spacing.lg },
+    input: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      borderWidth: 1,
+      borderColor: c.separator,
+      borderRadius: 8,
+      padding: 10,
+      fontSize: 20,
+      textAlign: 'center',
+    },
+    error: { ...fonts.footnote, color: c.red, textAlign: 'center', marginTop: spacing.sm },
+  }),
+);

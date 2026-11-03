@@ -2,7 +2,7 @@ import type { PropsWithChildren, RefObject } from 'react';
 import { ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, spacing } from '../theme';
+import { createStyles, fonts, spacing } from '../theme';
 
 interface ScreenProps extends PropsWithChildren {
   title?: string;
@@ -15,6 +15,7 @@ interface ScreenProps extends PropsWithChildren {
 }
 
 export function Screen({ title, headerRight, scroll = true, contentStyle, scrollRef, children }: ScreenProps) {
+  const styles = useStyles();
   const header = title ? (
     <View style={styles.titleRow}>
       <Text style={styles.title}>{title}</Text>
@@ -40,16 +41,18 @@ export function Screen({ title, headerRight, scroll = true, contentStyle, scroll
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { paddingBottom: spacing.xl, flexGrow: 1 },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: 40,
-    paddingBottom: spacing.md,
-  },
-  title: { ...fonts.largeTitle, color: colors.text },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    content: { paddingBottom: spacing.xl, flexGrow: 1 },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: 40,
+      paddingBottom: spacing.md,
+    },
+    title: { ...fonts.largeTitle, color: c.text },
+  }),
+);

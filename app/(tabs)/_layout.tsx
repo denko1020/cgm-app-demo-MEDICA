@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { useStrings } from '@/core/i18n';
 import { SimSpeedControl } from '@/ui/components/SimSpeedControl';
 import { ViewModeControl } from '@/ui/components/ViewModeControl';
-import { colors, radius } from '@/ui/theme';
+import { radius, useColors } from '@/ui/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -16,16 +16,17 @@ function icon(name: IconName) {
 
 export default function TabsLayout() {
   const t = useStrings();
+  const c = useColors();
   return (
     <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.gray,
-          tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
-          tabBarActiveBackgroundColor: colors.surfaceAlt,
-          tabBarInactiveBackgroundColor: colors.surfaceAlt,
+          tabBarActiveTintColor: c.primary,
+          tabBarInactiveTintColor: c.gray,
+          tabBarStyle: { backgroundColor: c.card, borderTopColor: c.separator },
+          tabBarActiveBackgroundColor: c.surfaceAlt,
+          tabBarInactiveBackgroundColor: c.surfaceAlt,
           tabBarItemStyle: { marginHorizontal: 4, marginVertical: 6, borderRadius: radius.md },
         }}
       >

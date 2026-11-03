@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Switch, Text, View, type SwitchProps } from 'react-native';
 
-import { colors, fonts, radius, spacing } from '../theme';
+import { createStyles, fonts, radius, spacing, useColors } from '../theme';
 
 interface AccentSwitchProps {
   value: boolean;
@@ -14,13 +14,16 @@ interface AccentSwitchProps {
  * defs, hence the cast.
  */
 export function AccentSwitch({ value, onValueChange }: AccentSwitchProps) {
-  const extra = { activeThumbColor: colors.background } as Partial<SwitchProps>;
+  const c = useColors();
+  // The thumb stays white in both themes: it has to read against the grey of
+  // the off track and the accent blue of the on track alike.
+  const extra = { activeThumbColor: '#FFFFFF' } as Partial<SwitchProps>;
   return (
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: colors.surfaceAlt, true: colors.primary }}
-      thumbColor={colors.background}
+      trackColor={{ false: c.surfaceAlt, true: c.primary }}
+      thumbColor="#FFFFFF"
       {...extra}
     />
   );
@@ -33,6 +36,7 @@ interface SegmentedProps<T extends string | number> {
 }
 
 export function Segmented<T extends string | number>({ options, value, onChange }: SegmentedProps<T>) {
+  const styles = useStyles();
   return (
     <View style={styles.segmented}>
       {options.map((o) => {
@@ -59,17 +63,19 @@ interface StepperProps {
 }
 
 export function Stepper({ value, onChange, step = 1, min = -Infinity, max = Infinity, format }: StepperProps) {
+  const c = useColors();
+  const styles = useStyles();
   const dec = () => onChange(Math.max(min, round(value - step)));
   const inc = () => onChange(Math.min(max, round(value + step)));
   return (
     <View style={styles.stepper}>
       <Text style={styles.stepperValue}>{format ? format(value) : String(value)}</Text>
       <Pressable onPress={dec} style={styles.stepBtn} disabled={value <= min}>
-        <Ionicons name="remove-circle" size={22} color={value <= min ? colors.textTertiary : colors.primary} />
+        <Ionicons name="remove-circle" size={22} color={value <= min ? c.textTertiary : c.primary} />
       </Pressable>
       <View style={styles.stepDivider} />
       <Pressable onPress={inc} style={styles.stepBtn} disabled={value >= max}>
-        <Ionicons name="add-circle" size={22} color={value >= max ? colors.textTertiary : colors.primary} />
+        <Ionicons name="add-circle" size={22} color={value >= max ? c.textTertiary : c.primary} />
       </Pressable>
     </View>
   );
@@ -79,23 +85,25 @@ function round(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-const styles = StyleSheet.create({
-  segmented: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.md,
-    padding: 3,
-    gap: 4,
-    maxWidth: 220,
-  },
-  segment: { flexShrink: 0, paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, minWidth: 48, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.primary },
-  segmentText: { ...fonts.footnote, color: colors.textSecondary },
-  segmentTextActive: { color: '#FFFFFF', fontWeight: '700' },
-  stepper: { flexDirection: 'row', alignItems: 'center' },
-  stepperValue: { ...fonts.body, color: colors.textSecondary, marginRight: spacing.md },
-  stepBtn: { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: colors.surfaceAlt, borderRadius: radius.pill },
-  stepDivider: { width: 4 },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    segmented: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+      backgroundColor: c.surfaceAlt,
+      borderRadius: radius.md,
+      padding: 3,
+      gap: 4,
+      maxWidth: 220,
+    },
+    segment: { flexShrink: 0, paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, minWidth: 48, alignItems: 'center' },
+    segmentActive: { backgroundColor: c.primary },
+    segmentText: { ...fonts.footnote, color: c.textSecondary },
+    segmentTextActive: { color: c.onAccent, fontWeight: '700' },
+    stepper: { flexDirection: 'row', alignItems: 'center' },
+    stepperValue: { ...fonts.body, color: c.textSecondary, marginRight: spacing.md },
+    stepBtn: { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: c.surfaceAlt, borderRadius: radius.pill },
+    stepDivider: { width: 4 },
+  }),
+);

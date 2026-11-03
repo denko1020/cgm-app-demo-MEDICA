@@ -13,13 +13,14 @@ import { useConfirm } from '@/ui/components/Confirm';
 import { AccentSwitch, Segmented, Stepper } from '@/ui/components/Controls';
 import { Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
-import { colors, fonts, spacing } from '@/ui/theme';
+import { createStyles, fonts, spacing } from '@/ui/theme';
 
 const INTERVALS = [5, 10, 30, 60, 300];
 
 export default function SettingsScreen() {
   const t = useStrings();
   const confirm = useConfirm();
+  const styles = useStyles();
   const s = useAppStore();
   // The profile button on Home links straight here with ?section=profile.
   const { section } = useLocalSearchParams<{ section?: string }>();
@@ -67,6 +68,10 @@ export default function SettingsScreen() {
   return (
     <Screen title={t.settings.title} scrollRef={scrollRef}>
       <Section title={t.settings.homeScreen}>
+        <Row
+          label={t.settings.darkMode}
+          right={<AccentSwitch value={s.darkMode} onValueChange={s.setDarkMode} />}
+        />
         <Row
           label={t.settings.language}
           right={
@@ -204,6 +209,7 @@ interface TextRowProps {
 }
 
 function TextRow({ label, value, onCommit, keyboardType = 'default', last }: TextRowProps) {
+  const styles = useStyles();
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
   const commit = () => onCommit(text.trim());
@@ -225,8 +231,10 @@ function TextRow({ label, value, onCommit, keyboardType = 'default', last }: Tex
   );
 }
 
-const styles = StyleSheet.create({
-  resetBlock: { marginTop: spacing.lg },
-  resetNote: { ...fonts.caption, color: colors.textTertiary, paddingHorizontal: spacing.lg, marginTop: spacing.xs },
-  nameInput: { minWidth: 140, textAlign: 'right', ...fonts.body, color: colors.primary },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    resetBlock: { marginTop: spacing.lg },
+    resetNote: { ...fonts.caption, color: c.textTertiary, paddingHorizontal: spacing.lg, marginTop: spacing.xs },
+    nameInput: { minWidth: 140, textAlign: 'right', ...fonts.body, color: c.primary },
+  }),
+);

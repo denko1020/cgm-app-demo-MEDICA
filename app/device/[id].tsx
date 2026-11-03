@@ -13,10 +13,12 @@ import { Button } from '@/ui/components/Button';
 import { useConfirm } from '@/ui/components/Confirm';
 import { Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
-import { colors, fonts, spacing } from '@/ui/theme';
+import { createStyles, fonts, spacing, useColors } from '@/ui/theme';
 
 export default function DeviceProfileScreen() {
   const t = useStrings();
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const confirm = useConfirm();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,11 +40,11 @@ export default function DeviceProfileScreen() {
     navigation.setOptions({
       headerLeft: () => (
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color={colors.primary} />
+          <Ionicons name="arrow-back" size={26} color={c.primary} />
         </Pressable>
       ),
     });
-  }, [navigation, router]);
+  }, [navigation, router, c, styles]);
 
   if (!device) {
     return (
@@ -71,7 +73,7 @@ export default function DeviceProfileScreen() {
       <Image source={require('../../assets/device-sensor.png')} style={styles.deviceImage} resizeMode="contain" />
       <Section title={t.devices.general}>
         <DeviceNameRow label={t.devices.name} value={device.name} onCommit={(name) => renameDevice(device.id, name)} />
-        <Row label={t.devices.connection} value={connectionLabel} valueColor={connected ? colors.green : colors.red} />
+        <Row label={t.devices.connection} value={connectionLabel} valueColor={connected ? c.green : c.red} />
         <Row label={t.devices.signal} value={`${device.rssi} dBm`} last />
       </Section>
 
@@ -113,6 +115,7 @@ interface DeviceNameRowProps {
 }
 
 function DeviceNameRow({ label, value, onCommit }: DeviceNameRowProps) {
+  const styles = useStyles();
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
   const commit = () => {
@@ -132,6 +135,7 @@ interface ParamRowProps {
 }
 
 function ParamRow({ label, field, device, onChange, last }: ParamRowProps) {
+  const styles = useStyles();
   const [text, setText] = useState(String(device.algorithm[field]));
   useEffect(() => setText(String(device.algorithm[field])), [device.algorithm, field]);
 
@@ -152,18 +156,20 @@ function ParamRow({ label, field, device, onChange, last }: ParamRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  missing: { ...fonts.body, color: colors.textSecondary, padding: spacing.lg },
-  deviceImage: { width: '100%', height: 160, marginTop: spacing.lg },
-  backButton: { paddingHorizontal: 4, paddingVertical: 4 },
-  input: {
-    minWidth: 80,
-    textAlign: 'right',
-    ...fonts.body,
-    color: colors.primary,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: colors.background,
-    borderRadius: 6,
-  },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    missing: { ...fonts.body, color: c.textSecondary, padding: spacing.lg },
+    deviceImage: { width: '100%', height: 160, marginTop: spacing.lg },
+    backButton: { paddingHorizontal: 4, paddingVertical: 4 },
+    input: {
+      minWidth: 80,
+      textAlign: 'right',
+      ...fonts.body,
+      color: c.primary,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      backgroundColor: c.background,
+      borderRadius: 6,
+    },
+  }),
+);

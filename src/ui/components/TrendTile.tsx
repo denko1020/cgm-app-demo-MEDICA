@@ -1,7 +1,7 @@
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import type { Trend } from '@/core/types';
-import { colors } from '@/ui/theme';
+import { type Colors, useColors } from '@/ui/theme';
 
 interface Props {
   trend: Trend;
@@ -81,10 +81,10 @@ const FALLING: Trend[] = ['down', 'downModerate', 'downSlight'];
 const TIP_W = 24;
 const TIP_BASE = 9;
 
-function tintFor(trend: Trend): string {
-  if (RISING.includes(trend)) return colors.trendRise;
-  if (FALLING.includes(trend)) return colors.trendFall;
-  return colors.trendFlat;
+function tintFor(trend: Trend, c: Colors): string {
+  if (RISING.includes(trend)) return c.trendRise;
+  if (FALLING.includes(trend)) return c.trendFall;
+  return c.trendFlat;
 }
 
 /**
@@ -101,7 +101,8 @@ const NEEDLE = `M${CX} 59 L${CX + 20} 94 L${CX + 5} 89 L${CX} 129 L${CX - 5} 89 
  * stays legible without relying on colour alone.
  */
 export function TrendTile({ trend, size = 56 }: Props) {
-  const tint = tintFor(trend);
+  const c = useColors();
+  const tint = tintFor(trend, c);
   const angle = ANGLE[trend];
   const lit = LIT[trend];
   const rising = RISING.includes(trend);
@@ -109,7 +110,7 @@ export function TrendTile({ trend, size = 56 }: Props) {
   /** One band. `below` mirrors it onto the underside of the ring. */
   const chevron = (index: number, below: boolean) => {
     const isLit = index < lit && below !== rising;
-    const fill = isLit ? tint : colors.trendIdle;
+    const fill = isLit ? tint : c.trendIdle;
 
     // The outermost band is a small triangle pointing outwards, not an arc.
     if (index === ARCS.length) {

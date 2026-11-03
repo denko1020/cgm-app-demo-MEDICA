@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, radius, shadow, spacing } from '../theme';
+import { createStyles, fonts, radius, shadow, spacing, useColors } from '../theme';
 
 interface SectionProps extends PropsWithChildren {
   title?: string;
@@ -11,6 +11,7 @@ interface SectionProps extends PropsWithChildren {
 
 /** iOS-style grouped list section: uppercase header, white card, hairline separators. */
 export function Section({ title, footer, children }: SectionProps) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       {title ? <Text style={styles.sectionTitle}>{title.toUpperCase()}</Text> : null}
@@ -33,17 +34,19 @@ interface RowProps {
 }
 
 export function Row({ label, value, valueColor, right, onPress, chevron, destructive, last, subtitle }: RowProps) {
+  const c = useColors();
+  const styles = useStyles();
   const body = (
     <View style={[styles.row, last && styles.rowLast]}>
       <View style={styles.rowLabelWrap}>
-        <Text style={[styles.rowLabel, destructive && { color: colors.red }, onPress && !destructive && !chevron && { color: colors.primary }]}>
+        <Text style={[styles.rowLabel, destructive && { color: c.red }, onPress && !destructive && !chevron && { color: c.primary }]}>
           {label}
         </Text>
         {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
       </View>
       {value !== undefined ? <Text style={[styles.rowValue, valueColor ? { color: valueColor } : null]}>{String(value)}</Text> : null}
       {right}
-      {chevron ? <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} style={{ marginLeft: spacing.sm }} /> : null}
+      {chevron ? <Ionicons name="chevron-forward" size={18} color={c.textTertiary} style={{ marginLeft: spacing.sm }} /> : null}
     </View>
   );
   if (!onPress) return body;
@@ -55,6 +58,7 @@ export function Row({ label, value, valueColor, right, onPress, chevron, destruc
 }
 
 export function EmptyRow({ text }: { text: string }) {
+  const styles = useStyles();
   return (
     <View style={[styles.row, styles.rowLast]}>
       <Text style={styles.emptyText}>{text}</Text>
@@ -62,45 +66,47 @@ export function EmptyRow({ text }: { text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  section: { marginTop: spacing.xl },
-  sectionTitle: {
-    ...fonts.footnote,
-    color: colors.textSecondary,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  sectionFooter: {
-    ...fonts.footnote,
-    color: colors.textSecondary,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  card: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.separator,
-    ...shadow.card,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 48,
-    paddingVertical: spacing.md,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.lg,
-    marginLeft: 0,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.separator,
-  },
-  rowLast: { borderBottomWidth: 0 },
-  rowLabelWrap: { flex: 1 },
-  rowLabel: { ...fonts.body, color: colors.text },
-  rowSubtitle: { ...fonts.footnote, color: colors.textSecondary, marginTop: 2 },
-  rowValue: { ...fonts.body, color: colors.textSecondary, marginLeft: spacing.md },
-  pressed: { opacity: 0.6 },
-  emptyText: { ...fonts.body, color: colors.textTertiary },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    section: { marginTop: spacing.xl },
+    sectionTitle: {
+      ...fonts.footnote,
+      color: c.textSecondary,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+    },
+    sectionFooter: {
+      ...fonts.footnote,
+      color: c.textSecondary,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+    },
+    card: {
+      marginHorizontal: spacing.lg,
+      backgroundColor: c.card,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.separator,
+      ...shadow.card,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 48,
+      paddingVertical: spacing.md,
+      paddingLeft: spacing.lg,
+      paddingRight: spacing.lg,
+      marginLeft: 0,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderColor: c.separator,
+    },
+    rowLast: { borderBottomWidth: 0 },
+    rowLabelWrap: { flex: 1 },
+    rowLabel: { ...fonts.body, color: c.text },
+    rowSubtitle: { ...fonts.footnote, color: c.textSecondary, marginTop: 2 },
+    rowValue: { ...fonts.body, color: c.textSecondary, marginLeft: spacing.md },
+    pressed: { opacity: 0.6 },
+    emptyText: { ...fonts.body, color: c.textTertiary },
+  }),
+);

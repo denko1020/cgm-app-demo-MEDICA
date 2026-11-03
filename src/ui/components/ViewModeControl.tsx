@@ -7,7 +7,7 @@ import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import type { ViewMode } from '@/core/types';
 
-import { colors, fonts, spacing } from '../theme';
+import { createStyles, fonts, spacing, useColors } from '../theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -31,6 +31,8 @@ export function ViewModeControl() {
   const pathname = usePathname();
   const viewMode = useAppStore((s) => s.viewMode);
   const setViewMode = useAppStore((s) => s.setViewMode);
+  const c = useColors();
+  const styles = useStyles();
 
   // Home only: the mode it controls (Home's card/chart) isn't shown on the other tabs.
   if (pathname !== '/') return null;
@@ -49,7 +51,7 @@ export function ViewModeControl() {
           const active = o.value === viewMode;
           return (
             <Pressable key={o.value} onPress={() => setViewMode(o.value)} style={[styles.chip, active && styles.chipActive]}>
-              <Ionicons name={ICONS[o.value]} size={12} color={active ? '#fff' : colors.textSecondary} />
+              <Ionicons name={ICONS[o.value]} size={12} color={active ? c.onAccent : c.textSecondary} />
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{o.label}</Text>
             </Pressable>
           );
@@ -59,24 +61,26 @@ export function ViewModeControl() {
   );
 }
 
-const styles = StyleSheet.create({
-  host: { position: 'absolute', left: spacing.sm, zIndex: 100 },
-  track: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 15,
-    padding: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.separator,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 13,
-    paddingHorizontal: 6,
-    height: 26,
-  },
-  chipActive: { backgroundColor: colors.primary },
-  chipText: { ...fonts.caption, fontWeight: '700', color: colors.textSecondary, marginLeft: 4 },
-  chipTextActive: { color: '#fff' },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    host: { position: 'absolute', left: spacing.sm, zIndex: 100 },
+    track: {
+      flexDirection: 'row',
+      backgroundColor: c.card,
+      borderRadius: 15,
+      padding: 2,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.separator,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 13,
+      paddingHorizontal: 6,
+      height: 26,
+    },
+    chipActive: { backgroundColor: c.primary },
+    chipText: { ...fonts.caption, fontWeight: '700', color: c.textSecondary, marginLeft: 4 },
+    chipTextActive: { color: c.onAccent },
+  }),
+);

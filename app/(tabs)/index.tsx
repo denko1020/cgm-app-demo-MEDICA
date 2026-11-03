@@ -17,19 +17,21 @@ import { Screen } from '@/ui/components/Screen';
 import { StatusIndicator } from '@/ui/components/StatusIndicator';
 import { TrendTile } from '@/ui/components/TrendTile';
 import { EVENT_ICON } from '@/ui/eventStyle';
-import { colors, fonts, radius, shadow, spacing } from '@/ui/theme';
+import { type Colors, createStyles, fonts, radius, shadow, spacing, useColors } from '@/ui/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 /** Low <20%: red, 20-50%: orange, >=50%: the healthy blue the other indicators use. */
-function batteryColor(level: number): string {
-  if (level < 20) return colors.red;
-  if (level < 50) return colors.orange;
-  return colors.statusActive;
+function batteryColor(level: number, c: Colors): string {
+  if (level < 20) return c.red;
+  if (level < 50) return c.orange;
+  return c.statusActive;
 }
 
 export default function HomeScreen() {
   const t = useStrings();
+  const c = useColors();
+  const styles = useStyles();
   const localeTag = useLocaleTag();
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -68,7 +70,7 @@ export default function HomeScreen() {
 
   const value = latest ? analyteValue(latest, analyte) : undefined;
   const status = value === undefined ? null : analyteStatus(value, spec);
-  const statusColor = status === 'inRange' ? colors.green : status ? colors.red : colors.textSecondary;
+  const statusColor = status === 'inRange' ? c.green : status ? c.red : c.textSecondary;
   // "High" reads as hyperglycaemia in every dictionary; ketone and lactate only ever run elevated.
   const statusLabel =
     status === 'inRange' ? t.home.inRange : status === 'low' ? t.home.low : analyte === 'glucose' ? t.home.high : t.home.elevated;
@@ -104,20 +106,20 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.indicators}>
-        <StatusIndicator icon="heart" label={t.home.liveData} active={live} activeColor={colors.statusActive} />
+        <StatusIndicator icon="heart" label={t.home.liveData} active={live} activeColor={c.statusActive} />
         <StatusIndicator
           icon={battery > 20 ? 'battery-full' : 'battery-dead'}
           label={device ? `${battery}%` : '--'}
           active={!!device}
-          activeColor={batteryColor(battery)}
+          activeColor={batteryColor(battery, c)}
         />
         <StatusIndicator
           icon="link"
           label={connection === 'connecting' ? t.home.connecting : connected ? t.home.connected : t.home.disconnected}
           active={connected}
-          activeColor={colors.statusActive}
+          activeColor={c.statusActive}
         />
-        <StatusIndicator icon="cloud-upload" label={uploaded ? t.home.uploaded : `${t.home.pending} ${pendingCount}`} active={uploaded} activeColor={colors.statusActive} />
+        <StatusIndicator icon="cloud-upload" label={uploaded ? t.home.uploaded : `${t.home.pending} ${pendingCount}`} active={uploaded} activeColor={c.statusActive} />
       </View>
 
       <View style={styles.profileCard}>
@@ -133,7 +135,7 @@ export default function HomeScreen() {
           accessibilityLabel={t.settings.profileSection}
           testID="open-profile"
         >
-          <Ionicons name="person" size={20} color={colors.textSecondary} />
+          <Ionicons name="person" size={20} color={c.textSecondary} />
         </Pressable>
       </View>
 
@@ -146,7 +148,7 @@ export default function HomeScreen() {
                 <>
                   <View style={styles.valueBox}>
                     <View style={styles.valueRow}>
-                      <Text style={[styles.value, { color: colors.text }]}>{formatHba1c(avgCgm, hba1cUnit)}</Text>
+                      <Text style={[styles.value, { color: c.text }]}>{formatHba1c(avgCgm, hba1cUnit)}</Text>
                       <Text style={styles.unit}>{hba1cUnit}</Text>
                     </View>
                   </View>
@@ -188,7 +190,7 @@ export default function HomeScreen() {
                   accessibilityLabel={`${t.events.title}: ${t.events[kind]}`}
                   testID={`log-${kind}`}
                 >
-                  <MaterialCommunityIcons name={EVENT_ICON[kind]} size={20} color={colors.textSecondary} />
+                  <MaterialCommunityIcons name={EVENT_ICON[kind]} size={20} color={c.textSecondary} />
                 </Pressable>
               ))}
             </View>
@@ -220,9 +222,11 @@ interface WideActionProps {
 
 /** Full-width button under the event grid: Reports, then Find ER. */
 function WideAction({ icon, label, onPress }: WideActionProps) {
+  const c = useColors();
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} style={styles.wideAction} hitSlop={2}>
-      <Ionicons name={icon} size={15} color={colors.textSecondary} />
+      <Ionicons name={icon} size={15} color={c.textSecondary} />
       <Text style={styles.wideActionLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -232,93 +236,95 @@ function WideAction({ icon, label, onPress }: WideActionProps) {
 
 const EVENT_BUTTON = 36;
 
-const styles = StyleSheet.create({
-  indicators: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: 44,
-  },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.separator,
-  },
-  profileInfo: { flex: 1 },
-  profileName: { ...fonts.body, fontWeight: '700', color: colors.text },
-  profileMeta: { ...fonts.footnote, color: colors.textSecondary, marginTop: 2 },
-  profileButton: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.raised,
-  },
-  card: {
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
-    padding: spacing.lg,
-    backgroundColor: colors.card,
-    borderRadius: radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.separator,
-    ...shadow.card,
-  },
-  cardTitle: { ...fonts.footnote, color: colors.textSecondary, textTransform: 'uppercase' },
-  liveHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  liveDate: { ...fonts.footnote, color: colors.textSecondary },
-  // Readout, trend dial and action column sit side by side, as in the design.
-  cardBody: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm },
-  readout: { flexShrink: 1 },
-  // Takes the leftover width between the readout and the action column, so the
-  // trend dial centers in that gap instead of sitting flush against the buttons.
-  trendSlot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  // The design frames the status and the value together, with the timestamp loose underneath.
-  valueBox: {
-    alignSelf: 'flex-start',
-    minWidth: 112,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    ...shadow.raised,
-  },
-  valueRow: { flexDirection: 'row', alignItems: 'flex-end' },
-  value: { fontSize: 38, fontWeight: '700', lineHeight: 42 },
-  unit: { ...fonts.footnote, color: colors.textSecondary, marginLeft: spacing.xs, marginBottom: 5 },
-  status: { ...fonts.footnote, fontWeight: '700' },
-  meta: { ...fonts.footnote, color: colors.textSecondary, marginTop: spacing.sm },
-  notice: { ...fonts.footnote, color: colors.green, marginTop: spacing.sm, fontWeight: '600' },
-  empty: { ...fonts.body, color: colors.textSecondary },
-  actions: { width: EVENT_BUTTON * 2 + spacing.xs, gap: spacing.xs },
-  eventGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  eventButton: {
-    width: EVENT_BUTTON,
-    height: EVENT_BUTTON,
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.raised,
-  },
-  wideAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    height: 30,
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
-    ...shadow.raised,
-  },
-  wideActionLabel: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    indicators: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: 44,
+    },
+    profileCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.lg,
+      marginHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: c.card,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.separator,
+    },
+    profileInfo: { flex: 1 },
+    profileName: { ...fonts.body, fontWeight: '700', color: c.text },
+    profileMeta: { ...fonts.footnote, color: c.textSecondary, marginTop: 2 },
+    profileButton: {
+      width: 38,
+      height: 38,
+      borderRadius: radius.md,
+      backgroundColor: c.elevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadow.raised,
+    },
+    card: {
+      marginTop: spacing.lg,
+      marginHorizontal: spacing.lg,
+      padding: spacing.lg,
+      backgroundColor: c.card,
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.separator,
+      ...shadow.card,
+    },
+    cardTitle: { ...fonts.footnote, color: c.textSecondary, textTransform: 'uppercase' },
+    liveHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    liveDate: { ...fonts.footnote, color: c.textSecondary },
+    // Readout, trend dial and action column sit side by side, as in the design.
+    cardBody: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm },
+    readout: { flexShrink: 1 },
+    // Takes the leftover width between the readout and the action column, so the
+    // trend dial centers in that gap instead of sitting flush against the buttons.
+    trendSlot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    // The design frames the status and the value together, with the timestamp loose underneath.
+    valueBox: {
+      alignSelf: 'flex-start',
+      minWidth: 112,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: c.elevated,
+      borderRadius: radius.lg,
+      ...shadow.raised,
+    },
+    valueRow: { flexDirection: 'row', alignItems: 'flex-end' },
+    value: { fontSize: 38, fontWeight: '700', lineHeight: 42 },
+    unit: { ...fonts.footnote, color: c.textSecondary, marginLeft: spacing.xs, marginBottom: 5 },
+    status: { ...fonts.footnote, fontWeight: '700' },
+    meta: { ...fonts.footnote, color: c.textSecondary, marginTop: spacing.sm },
+    notice: { ...fonts.footnote, color: c.green, marginTop: spacing.sm, fontWeight: '600' },
+    empty: { ...fonts.body, color: c.textSecondary },
+    actions: { width: EVENT_BUTTON * 2 + spacing.xs, gap: spacing.xs },
+    eventGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+    eventButton: {
+      width: EVENT_BUTTON,
+      height: EVENT_BUTTON,
+      backgroundColor: c.elevated,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadow.raised,
+    },
+    wideAction: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      height: 30,
+      backgroundColor: c.elevated,
+      borderRadius: radius.md,
+      ...shadow.raised,
+    },
+    wideActionLabel: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+  }),
+);

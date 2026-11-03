@@ -14,10 +14,11 @@ import { Button } from '@/ui/components/Button';
 import { useConfirm } from '@/ui/components/Confirm';
 import { Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
-import { colors, spacing } from '@/ui/theme';
+import { spacing, useColors } from '@/ui/theme';
 
 export default function StatsScreen() {
   const t = useStrings();
+  const c = useColors();
   const confirm = useConfirm();
   const readings = useAppStore((s) => s.readings);
   const events = useAppStore((s) => s.events);
@@ -73,12 +74,12 @@ export default function StatsScreen() {
         <Row label={t.stats.steps} value={materials.steps.toLocaleString()} />
         <Row label={t.stats.postMealRise} value={materials.postMealRise === null ? '-' : `+${toDisplayUnit(materials.postMealRise, unit)} ${unit}`} />
         <Row label={t.stats.timeInRange} value={materials.timeInRange === null ? '-' : `${Math.round(materials.timeInRange * 100)}%`} />
-        <Row label={t.stats.healthIndex} value={score === null ? '-' : `${score} / 100`} valueColor={colors.green} last />
+        <Row label={t.stats.healthIndex} value={score === null ? '-' : `${score} / 100`} valueColor={c.green} last />
       </Section>
 
       <Section>
         <Row label={t.stats.lastUpload} value={lastUploadAt ? formatDateTime(lastUploadAt) : '-'} />
-        <Row label={t.stats.lastError} value={lastUploadError ?? '-'} valueColor={lastUploadError ? colors.red : undefined} />
+        <Row label={t.stats.lastError} value={lastUploadError ?? '-'} valueColor={lastUploadError ? c.red : undefined} />
         <Row label={t.stats.failNext} last right={<Switch value={failNext} onValueChange={toggleFail} />} />
       </Section>
 

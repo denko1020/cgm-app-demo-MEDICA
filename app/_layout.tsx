@@ -7,11 +7,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { activityController } from '@/core/activity/activityController';
 import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
+import { useAppStore } from '@/core/store/appStore';
 import { ConfirmProvider } from '@/ui/components/Confirm';
-import { colors } from '@/ui/theme';
+import { createStyles, useColors } from '@/ui/theme';
 
 export default function RootLayout() {
   const t = useStrings();
+  const c = useColors();
+  const styles = useStyles();
+  const dark = useAppStore((s) => s.darkMode);
 
   useEffect(() => {
     cgmController.bootstrap();
@@ -20,17 +24,17 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={dark ? 'light' : 'dark'} />
       <View style={styles.host}>
         <View style={styles.frame}>
           <ConfirmProvider>
             <Stack
               screenOptions={{
-                headerTintColor: colors.primary,
-                headerTitleStyle: { color: colors.text },
-                headerStyle: { backgroundColor: colors.background },
+                headerTintColor: c.primary,
+                headerTitleStyle: { color: c.text },
+                headerStyle: { backgroundColor: c.background },
                 headerShadowVisible: false,
-                contentStyle: { backgroundColor: colors.background },
+                contentStyle: { backgroundColor: c.background },
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -45,17 +49,19 @@ export default function RootLayout() {
 
 // On the web the app renders inside a phone-sized frame so the layout matches
 // what iOS/Android builds will show; native platforms fill the screen.
-const styles = StyleSheet.create({
-  host: {
-    flex: 1,
-    backgroundColor: Platform.OS === 'web' ? '#ECE7DE' : colors.background,
-    alignItems: 'center',
-  },
-  frame: {
-    flex: 1,
-    width: '100%',
-    maxWidth: Platform.OS === 'web' ? 430 : undefined,
-    backgroundColor: colors.background,
-    ...(Platform.OS === 'web' ? { borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#DAD3C6' } : null),
-  },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    host: {
+      flex: 1,
+      backgroundColor: Platform.OS === 'web' ? c.webBackdrop : c.background,
+      alignItems: 'center',
+    },
+    frame: {
+      flex: 1,
+      width: '100%',
+      maxWidth: Platform.OS === 'web' ? 430 : undefined,
+      backgroundColor: c.background,
+      ...(Platform.OS === 'web' ? { borderLeftWidth: 1, borderRightWidth: 1, borderColor: c.webFrameBorder } : null),
+    },
+  }),
+);

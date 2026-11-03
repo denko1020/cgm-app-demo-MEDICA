@@ -7,10 +7,12 @@ import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import { EmptyRow, Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
-import { colors, radius, spacing } from '@/ui/theme';
+import { createStyles, radius, spacing, useColors } from '@/ui/theme';
 
 export default function DevicesScreen() {
   const t = useStrings();
+  const c = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const devices = useAppStore((s) => s.devices);
   const discovered = useAppStore((s) => s.discovered);
@@ -21,10 +23,10 @@ export default function DevicesScreen() {
   const unpaired = discovered.filter((d) => !devices.some((p) => p.id === d.id));
 
   const scanButton = scanning ? (
-    <ActivityIndicator color={colors.primary} />
+    <ActivityIndicator color={c.primary} />
   ) : (
     <Pressable onPress={() => cgmController.startScan()} hitSlop={8} accessibilityLabel="scan">
-      <Ionicons name="add" size={28} color={colors.primary} />
+      <Ionicons name="add" size={28} color={c.primary} />
     </Pressable>
   );
 
@@ -47,18 +49,18 @@ export default function DevicesScreen() {
               right={
                 <View style={styles.status}>
                   {connecting ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ActivityIndicator size="small" color={c.primary} />
                   ) : (
                     <Ionicons
                       name={connected ? 'checkmark-circle' : 'ban'}
                       size={20}
-                      color={connected ? colors.green : colors.red}
+                      color={connected ? c.green : c.red}
                     />
                   )}
                   <Ionicons
                     name={d.info.batteryLevel > 20 ? 'battery-full' : 'battery-dead'}
                     size={20}
-                    color={d.info.batteryLevel > 20 ? colors.green : colors.red}
+                    color={d.info.batteryLevel > 20 ? c.green : c.red}
                     style={{ marginLeft: spacing.sm }}
                   />
                 </View>
@@ -90,8 +92,10 @@ export default function DevicesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  status: { flexDirection: 'row', alignItems: 'center', marginLeft: spacing.md },
-  connectBtn: { backgroundColor: colors.primary, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radius.pill },
-  connectText: { color: '#fff', fontWeight: '600', fontSize: 13 },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    status: { flexDirection: 'row', alignItems: 'center', marginLeft: spacing.md },
+    connectBtn: { backgroundColor: c.primary, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radius.pill },
+    connectText: { color: c.onAccent, fontWeight: '600', fontSize: 13 },
+  }),
+);

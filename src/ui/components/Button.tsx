@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, fonts, radius, shadow, spacing } from '../theme';
+import { createStyles, fonts, radius, shadow, spacing, useColors } from '../theme';
 
 interface ButtonProps {
   title: string;
@@ -11,8 +11,10 @@ interface ButtonProps {
 }
 
 export function Button({ title, onPress, variant = 'primary', loading, disabled }: ButtonProps) {
-  const bg = variant === 'primary' ? colors.primary : variant === 'destructive' ? colors.red : colors.card;
-  const fg = variant === 'secondary' ? colors.primary : '#FFFFFF';
+  const c = useColors();
+  const styles = useStyles();
+  const bg = variant === 'primary' ? c.primary : variant === 'destructive' ? c.red : c.card;
+  const fg = variant === 'secondary' ? c.primary : c.onAccent;
   return (
     <Pressable
       onPress={onPress}
@@ -29,14 +31,16 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
   );
 }
 
-const styles = StyleSheet.create({
-  btn: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    paddingVertical: 13,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-  },
-  secondaryBorder: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator },
-  text: { ...fonts.body, fontWeight: '600' },
-});
+const useStyles = createStyles((c) =>
+  StyleSheet.create({
+    btn: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      paddingVertical: 13,
+      borderRadius: radius.lg,
+      alignItems: 'center',
+    },
+    secondaryBorder: { borderWidth: StyleSheet.hairlineWidth, borderColor: c.separator },
+    text: { ...fonts.body, fontWeight: '600' },
+  }),
+);
