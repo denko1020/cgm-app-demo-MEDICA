@@ -56,6 +56,8 @@ export interface AppState {
   unit: GlucoseUnit;
   hba1cUnit: Hba1cUnit;
   viewMode: ViewMode;
+  /** Dark UI palette; off is the light reskin. Toggled in Settings. */
+  darkMode: boolean;
   therapy: TherapySettings;
   simulator: SimulatorOptions;
   autoUpload: boolean;
@@ -82,6 +84,7 @@ export interface AppState {
   setUnit(unit: GlucoseUnit): void;
   setHba1cUnit(unit: Hba1cUnit): void;
   setViewMode(mode: ViewMode): void;
+  setDarkMode(enabled: boolean): void;
   setTherapy(patch: Partial<TherapySettings>): void;
   setSimulator(patch: Partial<SimulatorOptions>): void;
   setAutoUpload(enabled: boolean): void;
@@ -117,6 +120,7 @@ const INITIAL = {
   unit: 'mg/dL' as GlucoseUnit,
   hba1cUnit: 'mmol/mol' as Hba1cUnit,
   viewMode: 'glucose' as ViewMode,
+  darkMode: false,
   therapy: { targetLow: 70, targetHigh: 180, alertsEnabled: true } as TherapySettings,
   simulator: { intervalSec: 10, scenario: 'normal', timeScale: 1, paused: false } as SimulatorOptions,
   autoUpload: true,
@@ -175,6 +179,7 @@ export const useAppStore = create<AppState>()(
         }),
       setAutoUpload: (autoUpload) => set({ autoUpload }),
       setViewMode: (viewMode) => set({ viewMode }),
+      setDarkMode: (darkMode) => set({ darkMode }),
 
       setScanning: (scanning) => set({ scanning }),
       addDiscovered: (device) =>
@@ -288,6 +293,7 @@ export const useAppStore = create<AppState>()(
         unit: s.unit,
         hba1cUnit: s.hba1cUnit,
         viewMode: s.viewMode,
+        darkMode: s.darkMode,
         therapy: s.therapy,
         simulator: s.simulator,
         autoUpload: s.autoUpload,
