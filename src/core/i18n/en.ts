@@ -124,6 +124,7 @@ export const en = {
   settings: {
     title: 'Settings',
     homeScreen: 'Home screen',
+    darkMode: 'Dark mode',
     language: 'Language',
     unit: 'Glucose unit',
     hba1cUnit: 'HbA1c unit',

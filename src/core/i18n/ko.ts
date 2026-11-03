@@ -126,6 +126,7 @@ export const ko: Strings = {
   settings: {
     title: '설정',
     homeScreen: '홈 화면',
+    darkMode: '다크 모드',
     language: '언어',
     unit: '혈당 단위',
     hba1cUnit: 'HbA1c 단위',

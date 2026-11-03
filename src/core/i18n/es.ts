@@ -126,6 +126,7 @@ export const es: Strings = {
   settings: {
     title: 'Ajustes',
     homeScreen: 'Pantalla de inicio',
+    darkMode: 'Modo oscuro',
     language: 'Idioma',
     unit: 'Unidad de glucosa',
     hba1cUnit: 'Unidad de HbA1c',
