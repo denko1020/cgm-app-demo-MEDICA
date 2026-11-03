@@ -284,13 +284,13 @@ Home 카드의 아이콘 4개로 기록함. `ScenarioEvent` 와 **같은 `events
 | `GlucoseUnit` | `mg/dL`, `mmol/L` (표시 변환: `mgdl / 18.016`) |
 | `Hba1cUnit` | `mmol/mol`, `%` |
 | `Analyte` | `glucose`(mg/dL, 기준 40–300), `ketone`(mmol/L, 정상 ≤0.6, 축 0–3), `lactate`(mmol/L, 정상 ≤2.2, 축 0–8) |
-| `ViewMode` | `Analyte` 3종 + `hba1c` — 화면 상단 토글의 GLU / KET / LAC / HbA1c |
+| `ViewMode` | `Analyte` 3종 + `hba1c` — 화면 상단 토글의 GLU / KET / LAC / A1c (칩 라벨만 `A1c`, 저장값은 `hba1c`) |
 | `ReadingSource` | `cgm`, `bgm` |
 | `Trend` | `up ⇈`, `upModerate ↑`, `upSlight ↗`, `flat →`, `downSlight ↘`, `downModerate ↓`, `down ⇊`, `unknown ·` |
 | `UserEventKind` | `meal`, `exercise`, `sleep`, `medication` |
 | `ConnectionState` | `disconnected`, `connecting`, `connected` |
 | `Gender` | `male`, `female`, `other` |
-| `SimulatorScenario` | `normal`(≈105), `meal`(+90 후 복귀), `hypo`(≈55), `hyper`(≈260) — 단위 mg/dL |
+| `SimulatorScenario` | `normal`(≈105), `meal`(+90 후 복귀), `hypo`(≈55), `hyper`(≈260) — 단위 mg/dL. 모든 시나리오의 기준선에 최대 ±8 mg/dL 의 느린 흔들림이 더해짐 |
 
 ---
 
