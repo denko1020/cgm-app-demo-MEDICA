@@ -43,7 +43,7 @@ export const ko: Strings = {
     glucose: 'GLU',
     ketone: 'KET',
     lactate: 'LAC',
-    hba1c: 'HbA1c',
+    hba1c: 'A1c',
   },
   events: {
     title: '이벤트 기록',

@@ -43,7 +43,7 @@ export const es: Strings = {
     glucose: 'GLU',
     ketone: 'KET',
     lactate: 'LAC',
-    hba1c: 'HbA1c',
+    hba1c: 'A1c',
   },
   events: {
     title: 'Registrar evento',
