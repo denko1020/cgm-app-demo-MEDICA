@@ -84,7 +84,7 @@ erDiagram
 
 ## 2. 루트 문서 스키마
 
-`partialize` 가 고르는 영속 키 16개와, 재시작 때마다 버려지는 휘발 키 5개로 나뉨.
+`partialize` 가 고르는 영속 키 17개와, 재시작 때마다 버려지는 휘발 키 5개로 나뉨.
 
 | 키 | 타입 | 영속 | 초기값 | 설명 |
 |---|---|:--:|---|---|
@@ -92,6 +92,7 @@ erDiagram
 | `unit` | `GlucoseUnit` | ✅ | `'mg/dL'` | 혈당 표시 단위 |
 | `hba1cUnit` | `Hba1cUnit` | ✅ | `'mmol/mol'` | 추정 HbA1c 표시 단위 |
 | `viewMode` | `ViewMode` | ✅ | `'glucose'` | Home 카드·차트·Readings 표시 모드 |
+| `darkMode` | `boolean` | ✅ | `false` | 다크 팔레트 사용 여부. Settings 의 스위치가 켜고 끔 |
 | `therapy` | `TherapySettings` | ✅ | `{70, 180, true}` | 목표 범위·알림 |
 | `simulator` | `SimulatorOptions` | ✅ | `{10, 'normal', 1, false}` | 가상 센서 옵션 |
 | `autoUpload` | `boolean` | ✅ | `true` | 측정 후 1.5 s 디바운스 자동 업로드 |
