@@ -14,6 +14,8 @@ export const colors = {
   gray: '#ACA79B',
   orange: '#F59E0B',
   greenSoft: '#DCFCE7',
+  /** Live data, battery, link and upload indicators when they are healthy. */
+  statusActive: '#0064F0',
   indigo: '#6366F1',
   violet: '#7C3AED',
   /** Trend indicator: muted red rising, muted blue falling, grey steady — from the design. */

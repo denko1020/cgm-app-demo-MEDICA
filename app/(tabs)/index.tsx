@@ -21,11 +21,11 @@ import { colors, fonts, radius, shadow, spacing } from '@/ui/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-/** Low <20%: red, 20-50%: orange, >=50%: green - matches common device battery conventions. */
+/** Low <20%: red, 20-50%: orange, >=50%: the healthy blue the other indicators use. */
 function batteryColor(level: number): string {
   if (level < 20) return colors.red;
   if (level < 50) return colors.orange;
-  return colors.green;
+  return colors.statusActive;
 }
 
 export default function HomeScreen() {
@@ -104,7 +104,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.indicators}>
-        <StatusIndicator icon="heart" label={t.home.liveData} active={live} activeColor={colors.green} />
+        <StatusIndicator icon="heart" label={t.home.liveData} active={live} activeColor={colors.statusActive} />
         <StatusIndicator
           icon={battery > 20 ? 'battery-full' : 'battery-dead'}
           label={device ? `${battery}%` : '--'}
@@ -115,9 +115,9 @@ export default function HomeScreen() {
           icon="link"
           label={connection === 'connecting' ? t.home.connecting : connected ? t.home.connected : t.home.disconnected}
           active={connected}
-          activeColor={colors.green}
+          activeColor={colors.statusActive}
         />
-        <StatusIndicator icon="cloud-upload" label={uploaded ? t.home.uploaded : `${t.home.pending} ${pendingCount}`} active={uploaded} activeColor={colors.green} />
+        <StatusIndicator icon="cloud-upload" label={uploaded ? t.home.uploaded : `${t.home.pending} ${pendingCount}`} active={uploaded} activeColor={colors.statusActive} />
       </View>
 
       <View style={styles.profileCard}>
@@ -188,7 +188,7 @@ export default function HomeScreen() {
                   accessibilityLabel={`${t.events.title}: ${t.events[kind]}`}
                   testID={`log-${kind}`}
                 >
-                  <MaterialCommunityIcons name={EVENT_ICON[kind]} size={20} color={colors.text} />
+                  <MaterialCommunityIcons name={EVENT_ICON[kind]} size={20} color={colors.textSecondary} />
                 </Pressable>
               ))}
             </View>
@@ -222,7 +222,7 @@ interface WideActionProps {
 function WideAction({ icon, label, onPress }: WideActionProps) {
   return (
     <Pressable onPress={onPress} style={styles.wideAction} hitSlop={2}>
-      <Ionicons name={icon} size={15} color={colors.text} />
+      <Ionicons name={icon} size={15} color={colors.textSecondary} />
       <Text style={styles.wideActionLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -320,5 +320,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     ...shadow.raised,
   },
-  wideActionLabel: { fontSize: 11, fontWeight: '700', color: colors.text },
+  wideActionLabel: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
 });
