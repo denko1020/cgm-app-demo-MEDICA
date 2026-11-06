@@ -172,6 +172,13 @@ export const stroke = { control: 2, field: 1 };
 export const TOUCH = 44;
 
 /**
+ * The chips that float over the top of Home: how far below the safe area they
+ * start, and how tall they are. Home reads these to clear its own first row of
+ * them, so the gap holds if the chip ever changes size.
+ */
+export const topChips = { offset: 6, height: 28 };
+
+/**
  * Pretendard is the brand face. The web build loads it from a CDN (see the
  * stylesheet link in public/index.html) and falls back through the platform
  * Korean faces; a native build has no font file bundled yet, so it stays on the

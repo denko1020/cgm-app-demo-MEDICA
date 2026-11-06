@@ -7,7 +7,7 @@ import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import type { ViewMode } from '@/core/types';
 
-import { createStyles, fonts, radius, spacing, useColors } from '../theme';
+import { createStyles, fonts, radius, spacing, topChips, useColors } from '../theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -45,7 +45,7 @@ export function ViewModeControl() {
   ];
 
   return (
-    <View style={[styles.host, { top: insets.top + 6 }]} pointerEvents="box-none">
+    <View style={[styles.host, { top: insets.top + topChips.offset }]} pointerEvents="box-none">
       <View style={styles.track} accessibilityLabel={t.mode.label} testID="view-mode">
         {options.map((o) => {
           const active = o.value === viewMode;
@@ -77,7 +77,7 @@ const useStyles = createStyles((c) =>
       alignItems: 'center',
       borderRadius: radius.pill,
       paddingHorizontal: 7,
-      height: 28,
+      height: topChips.height,
     },
     chipActive: { backgroundColor: c.primary },
     chipText: { ...fonts.caption, fontWeight: '700', color: c.primary, marginLeft: 4 },

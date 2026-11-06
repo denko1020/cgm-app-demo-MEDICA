@@ -9,7 +9,7 @@ import { useAppStore } from '@/core/store/appStore';
 import { TIME_SCALES } from '@/core/types';
 import { formatTime } from '@/core/util/format';
 
-import { createStyles, fonts, radius, spacing, tabular, useColors } from '../theme';
+import { createStyles, fonts, radius, spacing, tabular, topChips, useColors } from '../theme';
 
 /**
  * Global simulator speed toggle pinned to the top-right corner of the app.
@@ -36,7 +36,7 @@ export function SimSpeedControl() {
   const accelerated = timeScale > 1;
 
   return (
-    <View style={[styles.host, { top: insets.top + 6 }]} pointerEvents="box-none">
+    <View style={[styles.host, { top: insets.top + topChips.offset }]} pointerEvents="box-none">
       {open ? (
         <View style={styles.panel}>
           <Text style={styles.panelLabel}>{t.settings.timeScale}</Text>
@@ -93,7 +93,7 @@ const useStyles = createStyles((c) =>
       backgroundColor: c.card,
       borderRadius: radius.pill,
       paddingHorizontal: 10,
-      height: 28,
+      height: topChips.height,
       borderWidth: 1,
       borderColor: c.separator,
     },

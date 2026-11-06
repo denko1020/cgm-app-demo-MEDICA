@@ -17,7 +17,7 @@ import { Screen } from '@/ui/components/Screen';
 import { StatusIndicator } from '@/ui/components/StatusIndicator';
 import { TrendTile } from '@/ui/components/TrendTile';
 import { EVENT_ICON } from '@/ui/eventStyle';
-import { TOUCH, type Colors, createStyles, fonts, radius, spacing, tabular, useColors } from '@/ui/theme';
+import { TOUCH, type Colors, createStyles, fonts, radius, spacing, tabular, topChips, useColors } from '@/ui/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -242,7 +242,9 @@ const useStyles = createStyles((c) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
-      paddingTop: spacing.xxl,
+      // Clears the floating chips above, plus a step of air, so the two rows
+      // read as separate things rather than one crowded strip.
+      paddingTop: topChips.offset + topChips.height + spacing.lg,
     },
     profileCard: {
       flexDirection: 'row',
