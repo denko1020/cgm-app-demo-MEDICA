@@ -9,6 +9,7 @@ import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import { ConfirmProvider } from '@/ui/components/Confirm';
+import { IOS_WEB_APP_FOG, isIosWebApp } from '@/ui/iosWebApp';
 import { createStyles, darkColors, lightColors, useColors } from '@/ui/theme';
 
 export default function RootLayout() {
@@ -22,13 +23,16 @@ export default function RootLayout() {
     activityController.bootstrap();
   }, []);
 
-  // A home-screen install on iOS gets an opaque status bar above the web view,
-  // coloured from `theme-color` (see public/index.html). Keep that tag in step
-  // with the in-app dark switch so the strip never reads as a white band.
+  // The document sits behind our tree on the web: the browser paints it around
+  // the app (overscroll, the status bar strip of a home-screen install) and iOS
+  // samples it for system chrome. React Native Web only ever colours the app
+  // itself, so keep the page in step with the dark switch by hand.
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-    const tag = document.querySelector('meta[name="theme-color"]');
-    tag?.setAttribute('content', dark ? darkColors.background : lightColors.background);
+    const background = dark ? darkColors.background : lightColors.background;
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    document.body.style.backgroundColor = background;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background);
   }, [dark]);
 
   return (
@@ -70,6 +74,10 @@ const useStyles = createStyles((c) =>
       width: '100%',
       maxWidth: Platform.OS === 'web' ? 430 : undefined,
       backgroundColor: c.background,
+      // Holds the whole app - the floating chips included - below the iOS 26
+      // glass fade. The strip it leaves above is this view's own background,
+      // which is all the effect then has to blur.
+      paddingTop: isIosWebApp ? IOS_WEB_APP_FOG : 0,
       ...(Platform.OS === 'web' ? { borderLeftWidth: 1, borderRightWidth: 1, borderColor: c.webFrameBorder } : null),
     },
   }),

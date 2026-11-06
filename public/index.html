@@ -14,16 +14,18 @@
 
     <!-- iOS Safari "Add to Home Screen": opens without browser bars.
 
-         No `apple-mobile-web-app-status-bar-style` here on purpose. With
-         `black-translucent` the web view extends under the status bar, and
-         iOS 26 then paints its Liquid Glass blur over the top ~40pt of our
-         content - the haze that sat behind the view-mode and speed chips.
-         Left unset, iOS keeps an opaque status bar (coloured from
-         `theme-color`) above the web view, so nothing of ours is blurred.
+         `black-translucent` keeps the web view behind the status bar, so the
+         app's own background paints that strip and follows the dark switch.
+         iOS 26 fades a Liquid Glass effect over the status bar and ~40pt of
+         page below it; the root layout holds every control clear of that band
+         (IOS_WEB_APP_FOG in app/_layout.tsx), leaving the effect nothing but
+         flat background colour to blur. The alternative - an opaque system
+         status bar - is a fixed white strip that cannot follow dark mode.
          iOS reads these tags only when the icon is added to the Home screen:
          an existing install has to be removed and added again. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="OHC CGM" />
     <link rel="apple-touch-icon" href="/cgm-app-demo-MEDICA/icons/apple-touch-icon.png" />
 

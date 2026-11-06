@@ -54,7 +54,7 @@ npm run deploy:web   # 예비 수단: 로컬에서 export 해 gh-pages 브랜치
 `public/manifest.webmanifest`(PWA, `display: fullscreen`)와 `public/index.html`(iOS 홈 화면 메타 태그)이 들어 있어, 휴대폰에서 홈 화면에 추가하면 아이콘으로 열리고 브라우저 주소창 없이 실행됨. 아이콘 원본은 `assets/icon-source.svg`이며 `public/icons/`의 PNG는 여기서 만든 것임.
 
 - **Android (Chrome)**: 주소 접속 → 우측 상단 ⋮ → 「홈 화면에 추가」 또는 「앱 설치」. 상태바까지 숨긴 완전 전체화면으로 열림
-- **iPhone (Safari)**: 주소 접속 → 하단 공유 버튼 → 「홈 화면에 추가」. 주소창 없이 열리며, iOS 정책상 시계·배터리 상태바는 남음. 상태바 구간은 불투명하며 앱 배경색을 따름(위 「iOS 26 상단 흐림 제거」 참고). 메타 태그를 고친 뒤에는 기존 아이콘을 지우고 다시 추가해야 반영됨
+- **iPhone (Safari)**: 주소 접속 → 하단 공유 버튼 → 「홈 화면에 추가」. 주소창 없이 열리며, iOS 정책상 시계·배터리 상태바는 남음. 상태바 자리는 앱 배경이 칠함(위 「iOS 26 상단 흐림 제거」 참고). 메타 태그를 고친 뒤에는 기존 아이콘을 지우고 다시 추가해야 반영됨
 
 ## 화면 구성
 
@@ -112,9 +112,13 @@ src/ui/                   테마, 공통 컴포넌트, SVG 차트
 
 ### iOS 26 상단 흐림 제거
 
-iOS 26은 화면 위쪽 가장자리에 Liquid Glass 흐림(scroll edge effect)을 자동으로 그린다. 이 앱은 네이티브 헤더를 숨기고 보기 모드·배속 칩을 `insets.top + 6` 위치에 올리므로, 그 흐림이 칩 뒤의 안개처럼 보였다. Android에는 대응 효과가 없어 iOS에서만 보였고, 경로가 둘이라 양쪽을 각각 뜸.
+iOS 26 은 화면 위쪽에 Liquid Glass 페이드(scroll edge effect)를 자동으로 그린다. 보기 모드·배속 칩이 그 구간에 들어가 흐려 보였다. Android 에는 대응 효과가 없어 iOS 에서만 보였고, 경로가 둘이라 양쪽을 각각 뜸.
 
-**홈 화면 PWA (현재 시연 경로)**: `public/index.html` 에서 `apple-mobile-web-app-status-bar-style=black-translucent` 를 뺀다. 이 값이 있으면 웹뷰가 상태바 밑까지 올라가고 iOS 26 이 그 위로 블러를 덮어 그린다(상단 약 40pt). 빼면 상태바가 불투명해지고 웹뷰가 그 아래에서 시작해 우리 콘텐츠가 흐려지지 않는다. 상태바 색은 `theme-color` 가 정하므로, `app/_layout.tsx` 가 다크 모드 스위치에 맞춰 그 태그를 갱신한다(웹 전용). **iOS 는 이 메타 태그를 홈 화면에 추가할 때만 읽는다** — 이미 깔아둔 아이콘은 삭제 후 다시 추가해야 반영됨.
+**홈 화면 PWA (현재 시연 경로)**: 실측값은 아이폰 16 Pro 기준 화면 위에서 **98pt**(상태바 62pt + 36pt)였고, 그 구간이 끝나는 지점에서야 앱 배경색 `#141311` 이 나왔다. 효과 자체는 끌 수 없으므로 **그 띄에 아무것도 두지 않는** 방향으로 해결함 — `app/_layout.tsx` 의 프레임이 `IOS_WEB_APP_FOG`(40pt) 만큼 아래로 밀어서 칩까지 전부 띄 밖에 두고, 그 띄에는 프레임 배경색만 남긴다. 단색을 흐리면 같은 단색이므로 효과가 보이지 않는다.
+
+`public/index.html` 의 `apple-mobile-web-app-status-bar-style=black-translucent` 는 그래서 유지함. 이걸 빼면 iOS 가 불투명 시스템 상태바를 올리는데, 그 흰색 띄는 다크 모드를 따라가지 못해 더 눈에 띄었다(theme-color 를 런타임에 바꿔도 iOS 가 무시함). 반면 translucent 상태바는 그 자리를 앱 배경이 칠하므로 테마를 그대로 따른다. 문서 배경·`color-scheme` 도 다크 스위치에 맞춰 갱신함(React Native Web 은 앱 내부만 칠하고 문서는 건드리지 않음).
+
+**iOS 는 이 메타 태그를 홈 화면에 추가할 때만 읽는다** — 깔아둔 아이콘은 삭제 후 다시 추가해야 반영됨.
 
 **네이티브 빌드**: UIKit 이 모든 스크롤 뷰의 위쪽 가장자리에 같은 효과를 걸어 둔다. `src/ui/components/NoScrollEdgeEffect.ios.tsx` 가 react-native-screens 의 `ScrollViewMarker` 로 위쪽 효과만 끄고, 다른 플랫폼에서는 뷰를 더하지 않고 그대로 통과시킨다. 공용 `Screen` 과 Readings 의 `FlatList` 에 적용됨. Stack `screenOptions` 의 `scrollEdgeEffects` 는 중첩 내비게이터 안의 스크롤 뷰에는 적용되지 않아 쓰지 않았다.
 
