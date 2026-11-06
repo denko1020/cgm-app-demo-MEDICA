@@ -244,7 +244,7 @@ const useStyles = createStyles((c) =>
       paddingHorizontal: spacing.md,
       // Clears the floating chips above, plus a step of air, so the two rows
       // read as separate things rather than one crowded strip.
-      paddingTop: topChips.offset + topChips.height + spacing.lg,
+      paddingTop: topChips.offset + topChips.height + spacing.xl,
     },
     profileCard: {
       flexDirection: 'row',

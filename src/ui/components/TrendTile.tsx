@@ -88,16 +88,6 @@ function tintFor(trend: Trend, c: Colors): string {
 }
 
 /**
- * The ring is scenery, not the reading: it stays on the pale end of the brand
- * ramp so the needle and the lit chevrons carry the trend. A ring in the full
- * accent turns the dial into the loudest mark on the panel, which the guide
- * reserves for the one action a screen is asking for.
- */
-function ringFor(c: Colors): string {
-  return c.trendIdle;
-}
-
-/**
  * A compass needle pointing straight up through the ring; rotated for the other
  * states. It stops just inside the ring's inner edge (56 to 132) so that the
  * head never touches the ring once rotated.
@@ -155,7 +145,7 @@ export function TrendTile({ trend, size = 56 }: Props) {
   return (
     <Svg width={size} height={(size * VB_H) / VB_W} viewBox={`0 0 ${VB_W} ${VB_H}`}>
       {BAND_INDEXES.map((i) => chevron(i, false))}
-      <Circle cx={CX} cy={CY} r={R} stroke={ringFor(c)} strokeWidth={RING_STROKE} fill="none" />
+      <Circle cx={CX} cy={CY} r={R} stroke={tint} strokeWidth={RING_STROKE} fill="none" />
       {angle === null ? (
         [-22, 0, 22].map((dx) => <Circle key={dx} cx={CX + dx} cy={CY} r={8} fill={tint} />)
       ) : (

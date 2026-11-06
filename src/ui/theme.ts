@@ -63,15 +63,16 @@ export const lightColors = {
   onAccent: '#FFFFFF',
 
   /**
-   * Trend dial. Direction is already carried by the needle angle and the lit
-   * chevrons, so the colours stay inside the brand ramp instead of borrowing
-   * the red/green that mean out of range elsewhere on the screen.
+   * Trend dial. These are the dial's own colours from the artwork it was drawn
+   * from, kept through the OHC reskin by choice: muted red rising, muted blue
+   * falling, warm grey steady. They sit outside the guide's ramp, which is why
+   * they stay confined to this one piece of artwork.
    */
-  trendRise: '#013ECC',
-  trendFall: '#3F8CF8',
-  trendFlat: '#454545',
-  /** The ring and the chevrons the trend has not reached yet. */
-  trendIdle: '#CDCDCD',
+  trendRise: '#C0504D',
+  trendFall: '#5B8DB8',
+  trendFlat: '#8A857C',
+  /** The faint chevrons the trend has not reached yet. */
+  trendIdle: '#CFCAC1',
 
   /** Web only: the page behind the phone frame, and the frame's own edge. */
   webBackdrop: '#F3F3F5',
@@ -123,10 +124,10 @@ export const darkColors: Colors = {
   statusActive: '#3D8EFF',
   onAccent: '#0B0D11',
 
-  trendRise: '#94C6FD',
-  trendFall: '#3D8EFF',
-  trendFlat: '#B4B9C3',
-  trendIdle: '#3A4150',
+  trendRise: '#E08A86',
+  trendFall: '#7FB3DC',
+  trendFlat: '#A09A90',
+  trendIdle: '#3A3730',
 
   webBackdrop: '#080A0D',
   webFrameBorder: '#2C313B',
