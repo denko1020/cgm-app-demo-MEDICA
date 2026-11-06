@@ -125,7 +125,7 @@ export const ko: Strings = {
   },
   settings: {
     title: '설정',
-    homeScreen: '홈 화면',
+    general: '일반',
     darkMode: '다크 모드',
     language: '언어',
     unit: '혈당 단위',
@@ -143,8 +143,7 @@ export const ko: Strings = {
     contact: '연락처',
     contactName: '이름',
     contactPhone: '전화번호',
-    emergencyFixed: '119 (긴급)',
-    therapy: '치료',
+    dataSection: '데이터',
     targetLow: '목표 하한',
     targetHigh: '목표 상한',
     alerts: '범위 이탈 알림',

@@ -123,7 +123,7 @@ export const en = {
   },
   settings: {
     title: 'Settings',
-    homeScreen: 'Home screen',
+    general: 'General',
     darkMode: 'Dark mode',
     language: 'Language',
     unit: 'Glucose unit',
@@ -141,8 +141,7 @@ export const en = {
     contact: 'Contact',
     contactName: 'Name',
     contactPhone: 'Phone',
-    emergencyFixed: '119 (Emergency)',
-    therapy: 'Therapy',
+    dataSection: 'Data',
     targetLow: 'Target low',
     targetHigh: 'Target high',
     alerts: 'Range alerts',

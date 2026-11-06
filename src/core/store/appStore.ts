@@ -110,6 +110,8 @@ export interface AppState {
   markUploaded(ids: string[]): void;
   setUploading(uploading: boolean, error?: string | null): void;
   clearReadings(): void;
+  /** Shifts a history recorded at speed back onto the device clock. */
+  rebaseToRealTime(): void;
   /** Wipes every stored slice back to the first-run state (settings included). */
   resetAll(): void;
 }
@@ -271,6 +273,35 @@ export const useAppStore = create<AppState>()(
       },
       setUploading: (uploading, error = null) => set({ uploading, lastUploadError: error }),
       clearReadings: () => set({ readings: [], events: [], activity: [], lastReadingAt: null }),
+
+      /**
+       * Pulls a history recorded at speed back onto the device clock, keeping
+       * its shape: everything shifts by the same amount, so intervals, the
+       * sensor's age and the 24 hour windows all still hold. A no-op unless the
+       * last session actually ran ahead.
+       */
+      rebaseToRealTime: () => {
+        const s = get();
+        const newest = Math.max(
+          s.lastReadingAt ?? 0,
+          ...s.readings.map((r) => r.timestamp),
+          ...s.events.map((e) => e.timestamp),
+          ...s.activity.map((a) => a.timestamp),
+        );
+        const shift = simClock.aheadOfRealTime(newest);
+        if (shift === 0) return;
+        set({
+          readings: s.readings.map((r) => ({ ...r, timestamp: r.timestamp - shift })),
+          events: s.events.map((e) => ({ ...e, timestamp: e.timestamp - shift })),
+          activity: s.activity.map((a) => ({ ...a, timestamp: a.timestamp - shift })),
+          lastReadingAt: s.lastReadingAt === null ? null : s.lastReadingAt - shift,
+          devices: s.devices.map((d) => ({
+            ...d,
+            sensorStartedAt: d.sensorStartedAt === null ? null : d.sensorStartedAt - shift,
+            pairedAt: d.pairedAt - shift,
+          })),
+        });
+      },
       resetAll: () => set({ ...INITIAL, therapy: { ...INITIAL.therapy }, simulator: { ...INITIAL.simulator } }),
     }),
     {

@@ -4,6 +4,10 @@
  * (pause). Readings, sensor lifetime and
  * time-window statistics use this clock so that a day of wear can be tested
  * in minutes.
+ *
+ * Every launch starts from the device clock. Time it gained while running fast
+ * is not carried over, because a demo that opens showing next week's date reads
+ * as a broken app rather than as a fast simulation.
  */
 class SimClock {
   private anchorReal = Date.now();
@@ -32,12 +36,14 @@ class SimClock {
     this.currentScale = 1;
   }
 
-  /** Never let simulated time run behind an already recorded timestamp (e.g. after a reload). */
-  ensureAtLeast(timestamp: number) {
-    if (timestamp > this.now()) {
-      this.anchorReal = Date.now();
-      this.anchorSim = timestamp;
-    }
+  /**
+   * How far a stored timestamp runs ahead of the device clock, in ms, or 0 when
+   * it does not. A session at 100x writes readings hours or days into the
+   * future; the store shifts its history back by this much on the next launch
+   * so the dates on screen are the ones on the user's phone.
+   */
+  aheadOfRealTime(timestamp: number): number {
+    return Math.max(0, timestamp - Date.now());
   }
 }
 

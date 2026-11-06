@@ -105,6 +105,9 @@ const useStyles = createStyles((c) =>
     chipClock: { ...fonts.caption, ...tabular, color: c.primarySoft, marginLeft: 6 },
     panel: {
       marginRight: spacing.sm,
+      // Capped and wrapping: the row of six speeds is wider than a 390pt phone
+      // once it opens leftwards from the chip, and ran off the screen edge.
+      maxWidth: 196,
       backgroundColor: c.background,
       borderRadius: radius.popup,
       padding: spacing.sm,
@@ -112,8 +115,8 @@ const useStyles = createStyles((c) =>
       borderColor: c.border,
     },
     panelLabel: { ...fonts.caption, color: c.textTertiary, marginBottom: 4 },
-    options: { flexDirection: 'row' },
-    option: { paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.control, marginRight: 2 },
+    options: { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
+    option: { paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.control },
     optionActive: { backgroundColor: c.tint },
     optionText: { ...fonts.footnote, ...tabular, color: c.text },
     optionTextActive: { color: c.onAccent, fontWeight: '700' },

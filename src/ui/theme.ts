@@ -20,6 +20,8 @@ export const lightColors = {
   surfaceAlt: '#F9F9F9',
   /** surface-chart: charts and timelines. */
   chartSurface: '#F8F9FD',
+  /** The row a pointer is on, in a list the user is choosing from. */
+  selected: '#D9E7FC',
   elevated: '#FFFFFF',
   /** border-subtle: dividers inside a panel. */
   separator: '#E1E1E1',
@@ -94,6 +96,7 @@ export const darkColors: Colors = {
   card: '#191C22',
   surfaceAlt: '#1F232B',
   chartSurface: '#161920',
+  selected: '#1B2D4A',
   elevated: '#232730',
   separator: '#2C313B',
   border: '#3A4150',

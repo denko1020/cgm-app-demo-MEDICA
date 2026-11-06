@@ -1,4 +1,4 @@
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import type { Trend } from '@/core/types';
 import { type Colors, useColors } from '@/ui/theme';
@@ -32,8 +32,8 @@ const CHEVRON_STROKE = 8;
  * beyond them without pushing it off the box.
  */
 const ARCS = [
-  { w: 71, base: 44, apex: 33 },
-  { w: 50, base: 25, apex: 18 },
+  { w: 62, base: 44, apex: 33 },
+  { w: 43, base: 25, apex: 18 },
 ];
 
 /** One tip plus the arcs: how many bands stack on each side of the ring. */
@@ -88,6 +88,22 @@ function tintFor(trend: Trend, c: Colors): string {
 }
 
 /**
+ * Mixes a hex colour towards white (positive) or black (negative) by `amount`,
+ * 0 to 1. The dial's relief is built from one tint rather than from a second
+ * palette entry, so a change of trend colour carries the shading with it.
+ */
+function shade(hex: string, amount: number): string {
+  const target = amount >= 0 ? 255 : 0;
+  const k = Math.abs(amount);
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (channel: number) => Math.round(channel + (target - channel) * k);
+  const r = mix((n >> 16) & 255);
+  const g = mix((n >> 8) & 255);
+  const b = mix(n & 255);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+/**
  * A compass needle pointing straight up through the ring; rotated for the other
  * states. It stops just inside the ring's inner edge (56 to 132) so that the
  * head never touches the ring once rotated.
@@ -106,11 +122,16 @@ export function TrendTile({ trend, size = 56 }: Props) {
   const angle = ANGLE[trend];
   const lit = LIT[trend];
   const rising = RISING.includes(trend);
+  // The relief is a light top and a darker underside on every mark, plus one
+  // soft shadow behind the ring. Kept to a few per cent of lightness: enough to
+  // round the dial, not enough to read as a glossy button. The gradient ids
+  // carry the state so two dials on one screen never share a definition.
+  const uid = `td${angle ?? 'f'}${tint.slice(1)}`;
 
   /** One band. `below` mirrors it onto the underside of the ring. */
   const chevron = (index: number, below: boolean) => {
     const isLit = index < lit && below !== rising;
-    const fill = isLit ? tint : c.trendIdle;
+    const fill = isLit ? `url(#${uid}mark)` : `url(#${uid}idle)`;
 
     // The outermost band is a small triangle pointing outwards, not an arc.
     if (index === ARCS.length) {
@@ -144,12 +165,28 @@ export function TrendTile({ trend, size = 56 }: Props) {
 
   return (
     <Svg width={size} height={(size * VB_H) / VB_W} viewBox={`0 0 ${VB_W} ${VB_H}`}>
+      <Defs>
+        <LinearGradient id={`${uid}ring`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={shade(tint, 0.3)} />
+          <Stop offset="0.55" stopColor={tint} />
+          <Stop offset="1" stopColor={shade(tint, -0.22)} />
+        </LinearGradient>
+        <LinearGradient id={`${uid}mark`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={shade(tint, 0.22)} />
+          <Stop offset="1" stopColor={shade(tint, -0.16)} />
+        </LinearGradient>
+        <LinearGradient id={`${uid}idle`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={shade(c.trendIdle, 0.25)} />
+          <Stop offset="1" stopColor={shade(c.trendIdle, -0.12)} />
+        </LinearGradient>
+      </Defs>
       {BAND_INDEXES.map((i) => chevron(i, false))}
-      <Circle cx={CX} cy={CY} r={R} stroke={tint} strokeWidth={RING_STROKE} fill="none" />
+      <Circle cx={CX} cy={CY + 2} r={R} stroke={shade(tint, -0.45)} strokeOpacity={0.22} strokeWidth={RING_STROKE} fill="none" />
+      <Circle cx={CX} cy={CY} r={R} stroke={`url(#${uid}ring)`} strokeWidth={RING_STROKE} fill="none" />
       {angle === null ? (
-        [-22, 0, 22].map((dx) => <Circle key={dx} cx={CX + dx} cy={CY} r={8} fill={tint} />)
+        [-22, 0, 22].map((dx) => <Circle key={dx} cx={CX + dx} cy={CY} r={8} fill={`url(#${uid}mark)`} />)
       ) : (
-        <Path d={NEEDLE} fill={tint} transform={`rotate(${angle} ${CX} ${CY})`} />
+        <Path d={NEEDLE} fill={`url(#${uid}mark)`} transform={`rotate(${angle} ${CX} ${CY})`} />
       )}
       {BAND_INDEXES.map((i) => chevron(i, true))}
     </Svg>

@@ -11,6 +11,7 @@ import type { Gender, SimulatorScenario } from '@/core/types';
 import { Button } from '@/ui/components/Button';
 import { useConfirm } from '@/ui/components/Confirm';
 import { AccentSwitch, Segmented, Stepper } from '@/ui/components/Controls';
+import { Dropdown } from '@/ui/components/Dropdown';
 import { Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
 import { createStyles, fonts, spacing } from '@/ui/theme';
@@ -67,7 +68,30 @@ export default function SettingsScreen() {
 
   return (
     <Screen title={t.settings.title} scrollRef={scrollRef}>
-      <Section title={t.settings.homeScreen}>
+      <View onLayout={(e) => setProfileY((prev) => (prev === e.nativeEvent.layout.y ? prev : e.nativeEvent.layout.y))}>
+        <Section title={t.settings.profileSection}>
+          <TextRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
+          <Row
+            label={t.settings.profileAge}
+            right={<Stepper value={s.profile.age} step={1} min={1} max={120} onChange={(v) => s.setProfile({ age: v })} />}
+          />
+          <Row
+            label={t.settings.profileWeight}
+            right={<Stepper value={s.profile.weightKg} step={1} min={20} max={250} onChange={(v) => s.setProfile({ weightKg: v })} />}
+          />
+          <Row
+            label={t.settings.profileHeight}
+            right={<Stepper value={s.profile.heightCm} step={1} min={100} max={230} onChange={(v) => s.setProfile({ heightCm: v })} />}
+          />
+          <Row
+            label={t.settings.profileGender}
+            last
+            right={<Segmented options={genderOptions} value={s.profile.gender} onChange={(gender) => s.setProfile({ gender })} />}
+          />
+        </Section>
+      </View>
+
+      <Section title={t.settings.general}>
         <Row
           label={t.settings.darkMode}
           right={<AccentSwitch value={s.darkMode} onValueChange={s.setDarkMode} />}
@@ -115,30 +139,7 @@ export default function SettingsScreen() {
         />
       </Section>
 
-      <View onLayout={(e) => setProfileY((prev) => (prev === e.nativeEvent.layout.y ? prev : e.nativeEvent.layout.y))}>
-        <Section title={t.settings.profileSection}>
-          <TextRow value={s.profile.name} onCommit={(name) => s.setProfile({ name })} label={t.settings.profileName} />
-          <Row
-            label={t.settings.profileAge}
-            right={<Stepper value={s.profile.age} step={1} min={1} max={120} onChange={(v) => s.setProfile({ age: v })} />}
-          />
-          <Row
-            label={t.settings.profileWeight}
-            right={<Stepper value={s.profile.weightKg} step={1} min={20} max={250} onChange={(v) => s.setProfile({ weightKg: v })} />}
-          />
-          <Row
-            label={t.settings.profileHeight}
-            right={<Stepper value={s.profile.heightCm} step={1} min={100} max={230} onChange={(v) => s.setProfile({ heightCm: v })} />}
-          />
-          <Row
-            label={t.settings.profileGender}
-            last
-            right={<Segmented options={genderOptions} value={s.profile.gender} onChange={(gender) => s.setProfile({ gender })} />}
-          />
-        </Section>
-      </View>
-
-      <Section title={t.settings.emergencyContacts} footer={t.settings.emergencyFixed}>
+      <Section title={t.settings.emergencyContacts}>
         {s.emergencyContacts.map((c, i) => (
           <View key={i}>
             <TextRow label={`${t.settings.contact} ${i + 1} ${t.settings.contactName.toLowerCase()}`} value={c.name} onCommit={(name) => s.setEmergencyContact(i, { name })} />
@@ -153,7 +154,7 @@ export default function SettingsScreen() {
         ))}
       </Section>
 
-      <Section title={t.settings.therapy}>
+      <Section title={t.settings.dataSection}>
         <Row
           label={t.settings.targetLow}
           right={<Stepper value={s.therapy.targetLow} step={5} min={40} max={s.therapy.targetHigh - 10} onChange={(v) => s.setTherapy({ targetLow: v })} />}
@@ -177,14 +178,26 @@ export default function SettingsScreen() {
         <Row
           label={t.settings.simInterval}
           right={
-            <Segmented
+            <Dropdown
+              label={t.settings.simInterval}
               options={INTERVALS.map((v) => ({ label: `${v}${t.settings.seconds}`, value: v }))}
               value={s.simulator.intervalSec}
               onChange={(v) => s.setSimulator({ intervalSec: v })}
             />
           }
         />
-        <Row label={t.settings.simScenario} last right={<Segmented options={scenarios} value={s.simulator.scenario} onChange={(v) => s.setSimulator({ scenario: v })} />} />
+        <Row
+          label={t.settings.simScenario}
+          last
+          right={
+            <Dropdown
+              label={t.settings.simScenario}
+              options={scenarios}
+              value={s.simulator.scenario}
+              onChange={(v) => s.setSimulator({ scenario: v })}
+            />
+          }
+        />
       </Section>
 
       <View style={styles.resetBlock}>

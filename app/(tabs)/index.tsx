@@ -21,6 +21,9 @@ import { TOUCH, type Colors, createStyles, fonts, radius, spacing, tabular, topC
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
+/** Width of the trend dial, and of the column reserved for it. */
+const DIAL = 72;
+
 /** Low <20%: red, 20-50%: orange, >=50%: the healthy blue the other indicators use. */
 function batteryColor(level: number, c: Colors): string {
   if (level < 20) return c.red;
@@ -178,7 +181,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          <View style={styles.trendSlot}>{!hba1c && latest ? <TrendTile trend={trend} size={72} /> : null}</View>
+          <View style={styles.trendSlot}>{!hba1c && latest ? <TrendTile trend={trend} size={DIAL} /> : null}</View>
         </View>
 
         <View style={styles.divider} />
@@ -290,8 +293,11 @@ const useStyles = createStyles((c) =>
     // The reading and the dial that qualifies it sit side by side; everything
     // else in the panel is below the rule.
     cardBody: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, gap: spacing.sm },
-    readout: { flexShrink: 1 },
-    trendSlot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    // The readout takes the leftover width and the dial keeps a column of its
+    // own, so a two digit reading and a three digit one put the dial in exactly
+    // the same place.
+    readout: { flex: 1 },
+    trendSlot: { width: DIAL, alignItems: 'center', justifyContent: 'center' },
     badge: {
       flexDirection: 'row',
       alignItems: 'center',

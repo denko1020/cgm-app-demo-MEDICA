@@ -45,8 +45,8 @@ class CgmController {
     // Persisted state arrives asynchronously from AsyncStorage; restore the
     // last session only once it has been loaded.
     const restore = () => {
-      const { activeDeviceId, devices, simulator, lastReadingAt } = store.getState();
-      if (lastReadingAt) simClock.ensureAtLeast(lastReadingAt);
+      store.getState().rebaseToRealTime();
+      const { activeDeviceId, devices, simulator } = store.getState();
       applySimulator(simulator);
       if (activeDeviceId && devices.some((d) => d.id === activeDeviceId)) {
         void this.connect(activeDeviceId);

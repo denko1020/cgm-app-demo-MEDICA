@@ -125,7 +125,7 @@ export const es: Strings = {
   },
   settings: {
     title: 'Ajustes',
-    homeScreen: 'Pantalla de inicio',
+    general: 'General',
     darkMode: 'Modo oscuro',
     language: 'Idioma',
     unit: 'Unidad de glucosa',
@@ -143,8 +143,7 @@ export const es: Strings = {
     contact: 'Contacto',
     contactName: 'Nombre',
     contactPhone: 'Teléfono',
-    emergencyFixed: '119 (Emergencia)',
-    therapy: 'Terapia',
+    dataSection: 'Datos',
     targetLow: 'Límite inferior',
     targetHigh: 'Límite superior',
     alerts: 'Alertas de rango',
