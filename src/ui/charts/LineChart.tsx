@@ -185,12 +185,12 @@ export function LineChart({
         );
       })}
       {markers.map((m, i) => (
-        <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? c.orangeFill} strokeWidth={1} strokeDasharray="3 2" />
+        <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? c.orange} strokeWidth={1} strokeDasharray="3 2" />
       ))}
       {markers
         .filter((m) => m.label)
         .map((m, i) => (
-          <SvgText key={`ml${i}`} x={Math.min(x(m.index) + 3, padL + plotW - 2)} y={padT + 9} fontSize={8} fill={m.color ?? c.orangeFill} textAnchor="start">
+          <SvgText key={`ml${i}`} x={Math.min(x(m.index) + 3, padL + plotW - 2)} y={padT + 9} fontSize={8} fill={m.color ?? c.orange} textAnchor="start">
             {m.label}
           </SvgText>
         ))}
