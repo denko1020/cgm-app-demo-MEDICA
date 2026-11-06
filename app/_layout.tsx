@@ -9,7 +9,7 @@ import { cgmController } from '@/core/cgm/cgmController';
 import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import { ConfirmProvider } from '@/ui/components/Confirm';
-import { createStyles, useColors } from '@/ui/theme';
+import { createStyles, darkColors, lightColors, useColors } from '@/ui/theme';
 
 export default function RootLayout() {
   const t = useStrings();
@@ -21,6 +21,15 @@ export default function RootLayout() {
     cgmController.bootstrap();
     activityController.bootstrap();
   }, []);
+
+  // A home-screen install on iOS gets an opaque status bar above the web view,
+  // coloured from `theme-color` (see public/index.html). Keep that tag in step
+  // with the in-app dark switch so the strip never reads as a white band.
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const tag = document.querySelector('meta[name="theme-color"]');
+    tag?.setAttribute('content', dark ? darkColors.background : lightColors.background);
+  }, [dark]);
 
   return (
     <SafeAreaProvider>

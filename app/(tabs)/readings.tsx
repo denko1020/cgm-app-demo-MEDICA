@@ -13,6 +13,7 @@ import { csvFilename, readingsToCsv } from '@/core/util/csv';
 import { exportTextFile } from '@/core/util/exportFile';
 import { formatDateTime, trendArrow } from '@/core/util/format';
 import { Button } from '@/ui/components/Button';
+import { NoScrollEdgeEffect } from '@/ui/components/NoScrollEdgeEffect';
 import { EVENT_ICON, eventColors } from '@/ui/eventStyle';
 import { createStyles, fonts, radius, shadow, spacing, useColors } from '@/ui/theme';
 
@@ -125,14 +126,16 @@ export default function ReadingsScreen() {
           </Pressable>
         </View>
       </View>
-      <FlatList
-        data={ordered}
-        keyExtractor={(e) => e.item.id}
-        renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={<Text style={styles.empty}>{t.readings.empty}</Text>}
-        contentContainerStyle={ordered.length ? styles.list : styles.listEmpty}
-      />
+      <NoScrollEdgeEffect>
+        <FlatList
+          data={ordered}
+          keyExtractor={(e) => e.item.id}
+          renderItem={renderItem}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListEmptyComponent={<Text style={styles.empty}>{t.readings.empty}</Text>}
+          contentContainerStyle={ordered.length ? styles.list : styles.listEmpty}
+        />
+      </NoScrollEdgeEffect>
 
       <Modal visible={showAdd} transparent animationType="fade" onRequestClose={() => setShowAdd(false)}>
         <View style={styles.backdrop}>

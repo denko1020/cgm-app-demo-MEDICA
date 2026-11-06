@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { createStyles, fonts, spacing } from '../theme';
+import { NoScrollEdgeEffect } from './NoScrollEdgeEffect';
 
 interface ScreenProps extends PropsWithChildren {
   title?: string;
@@ -33,10 +34,12 @@ export function Screen({ title, headerRight, scroll = true, contentStyle, scroll
   }
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScrollView ref={scrollRef} contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled">
-        {header}
-        {children}
-      </ScrollView>
+      <NoScrollEdgeEffect>
+        <ScrollView ref={scrollRef} contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled">
+          {header}
+          {children}
+        </ScrollView>
+      </NoScrollEdgeEffect>
     </SafeAreaView>
   );
 }
