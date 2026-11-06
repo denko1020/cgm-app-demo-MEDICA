@@ -17,7 +17,7 @@ import { Screen } from '@/ui/components/Screen';
 import { StatusIndicator } from '@/ui/components/StatusIndicator';
 import { TrendTile } from '@/ui/components/TrendTile';
 import { EVENT_ICON } from '@/ui/eventStyle';
-import { type Colors, createStyles, fonts, radius, shadow, spacing, useColors } from '@/ui/theme';
+import { TOUCH, type Colors, createStyles, fonts, radius, spacing, tabular, useColors } from '@/ui/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -70,7 +70,11 @@ export default function HomeScreen() {
 
   const value = latest ? analyteValue(latest, analyte) : undefined;
   const status = value === undefined ? null : analyteStatus(value, spec);
-  const statusColor = status === 'inRange' ? c.green : status ? c.red : c.textSecondary;
+  // The guide fixes the status language: a tinted ground, the darker ink on it
+  // and an icon, so the state never rests on colour alone.
+  const statusInk = status === 'inRange' ? c.green : status ? c.red : c.textSecondary;
+  const statusGround = status === 'inRange' ? c.greenSoft : status ? c.redSoft : c.card;
+  const statusIcon: IconName = status === 'inRange' ? 'checkmark-circle' : status === 'low' ? 'arrow-down-circle' : 'alert-circle';
   // "High" reads as hyperglycaemia in every dictionary; ketone and lactate only ever run elevated.
   const statusLabel =
     status === 'inRange' ? t.home.inRange : status === 'low' ? t.home.low : analyte === 'glucose' ? t.home.high : t.home.elevated;
@@ -106,27 +110,27 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.indicators}>
-        <StatusIndicator icon="heart" label={t.home.liveData} active={live} activeColor={c.statusActive} />
+        <StatusIndicator icon="heart-outline" label={t.home.liveData} active={live} activeColor={c.statusActive} />
         <StatusIndicator
-          icon={battery > 20 ? 'battery-full' : 'battery-dead'}
+          icon={battery > 20 ? 'battery-full-outline' : 'battery-dead-outline'}
           label={device ? `${battery}%` : '--'}
           active={!!device}
           activeColor={batteryColor(battery, c)}
         />
         <StatusIndicator
-          icon="link"
+          icon="link-outline"
           label={connection === 'connecting' ? t.home.connecting : connected ? t.home.connected : t.home.disconnected}
           active={connected}
           activeColor={c.statusActive}
         />
-        <StatusIndicator icon="cloud-upload" label={uploaded ? t.home.uploaded : `${t.home.pending} ${pendingCount}`} active={uploaded} activeColor={c.statusActive} />
+        <StatusIndicator icon="cloud-upload-outline" label={uploaded ? t.home.uploaded : `${t.home.pending} ${pendingCount}`} active={uploaded} activeColor={c.statusActive} />
       </View>
 
       <View style={styles.profileCard}>
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{profile.name}</Text>
           <Text style={styles.profileMeta}>
-            {profile.age} · {profile.weightKg}kg · {profile.heightCm}cm · {genderLabel}
+            {profile.age}, {profile.weightKg}kg, {profile.heightCm}cm, {genderLabel}
           </Text>
         </View>
         <Pressable
@@ -146,11 +150,9 @@ export default function HomeScreen() {
             {hba1c ? (
               avgCgm !== null ? (
                 <>
-                  <View style={styles.valueBox}>
-                    <View style={styles.valueRow}>
-                      <Text style={[styles.value, { color: c.text }]}>{formatHba1c(avgCgm, hba1cUnit)}</Text>
-                      <Text style={styles.unit}>{hba1cUnit}</Text>
-                    </View>
+                  <View style={styles.valueRow}>
+                    <Text style={styles.value}>{formatHba1c(avgCgm, hba1cUnit)}</Text>
+                    <Text style={styles.unit}>{hba1cUnit}</Text>
                   </View>
                   <Text style={styles.meta}>{t.home.hba1cNote.replace('{n}', String(cgm.length))}</Text>
                 </>
@@ -159,12 +161,13 @@ export default function HomeScreen() {
               )
             ) : latest && value !== undefined ? (
               <>
-                <View style={styles.valueBox}>
-                  <Text style={[styles.status, { color: statusColor }]}>{statusLabel}</Text>
-                  <View style={styles.valueRow}>
-                    <Text style={[styles.value, { color: statusColor }]}>{formatAnalyte(value, analyte, unit)}</Text>
-                    <Text style={styles.unit}>{spec.unit}</Text>
-                  </View>
+                <View style={[styles.badge, { backgroundColor: statusGround }]}>
+                  <Ionicons name={statusIcon} size={14} color={statusInk} />
+                  <Text style={[styles.badgeText, { color: statusInk }]}>{statusLabel}</Text>
+                </View>
+                <View style={styles.valueRow}>
+                  <Text style={styles.value}>{formatAnalyte(value, analyte, unit)}</Text>
+                  <Text style={styles.unit}>{spec.unit}</Text>
                 </View>
                 <Text style={styles.meta}>
                   {t.home.lastReading} {formatTime(latest.timestamp)}
@@ -175,34 +178,33 @@ export default function HomeScreen() {
             )}
           </View>
 
-          <View style={styles.trendSlot}>
-            {!hba1c && latest ? <TrendTile trend={trend} size={66} /> : null}
-          </View>
+          <View style={styles.trendSlot}>{!hba1c && latest ? <TrendTile trend={trend} size={72} /> : null}</View>
+        </View>
 
-          <View style={styles.actions}>
-            <View style={styles.eventGrid}>
-              {USER_EVENT_KINDS.map((kind) => (
-                <Pressable
-                  key={kind}
-                  onPress={() => onLogEvent(kind)}
-                  style={styles.eventButton}
-                  hitSlop={2}
-                  accessibilityLabel={`${t.events.title}: ${t.events[kind]}`}
-                  testID={`log-${kind}`}
-                >
-                  <MaterialCommunityIcons name={EVENT_ICON[kind]} size={20} color={c.textSecondary} />
-                </Pressable>
-              ))}
-            </View>
-            <WideAction icon="clipboard" label={t.home.reports} onPress={() => router.push('/stats')} />
-            <WideAction icon="medkit" label={t.home.findHospital} onPress={() => void onFindHospital()} />
-          </View>
+        <View style={styles.divider} />
+
+        <View style={styles.eventRow}>
+          {USER_EVENT_KINDS.map((kind) => (
+            <Pressable
+              key={kind}
+              onPress={() => onLogEvent(kind)}
+              style={({ pressed }) => [styles.control, pressed && styles.controlPressed]}
+              accessibilityLabel={`${t.events.title}: ${t.events[kind]}`}
+              testID={`log-${kind}`}
+            >
+              <MaterialCommunityIcons name={EVENT_ICON[kind]} size={20} color={c.textSecondary} />
+            </Pressable>
+          ))}
+        </View>
+        <View style={styles.actionRow}>
+          <WideAction icon="clipboard-outline" label={t.home.reports} onPress={() => router.push('/stats')} />
+          <WideAction icon="medkit-outline" label={t.home.findHospital} onPress={() => void onFindHospital()} />
         </View>
         {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       </View>
 
       {!hba1c && cgm.length >= 2 ? (
-        <View style={styles.card}>
+        <View style={[styles.card, styles.chartCard]}>
           <View style={styles.liveHeader}>
             <Text style={styles.cardTitle}>{t.home.recent}</Text>
             <Text style={styles.liveDate}>{formatDateLabel(cgm[cgm.length - 1].timestamp, localeTag)}</Text>
@@ -220,13 +222,13 @@ interface WideActionProps {
   onPress: () => void;
 }
 
-/** Full-width button under the event grid: Reports, then Find ER. */
+/** One of the two labelled actions under the event row: Reports, then Find ER. */
 function WideAction({ icon, label, onPress }: WideActionProps) {
   const c = useColors();
   const styles = useStyles();
   return (
-    <Pressable onPress={onPress} style={styles.wideAction} hitSlop={2}>
-      <Ionicons name={icon} size={15} color={c.textSecondary} />
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.control, styles.wideAction, pressed && styles.controlPressed]}>
+      <Ionicons name={icon} size={16} color={c.textSecondary} />
       <Text style={styles.wideActionLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -234,97 +236,93 @@ function WideAction({ icon, label, onPress }: WideActionProps) {
   );
 }
 
-const EVENT_BUTTON = 36;
-
 const useStyles = createStyles((c) =>
   StyleSheet.create({
     indicators: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
-      paddingTop: 44,
+      paddingTop: spacing.xxl,
     },
     profileCard: {
       flexDirection: 'row',
       alignItems: 'center',
       marginTop: spacing.lg,
       marginHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
       backgroundColor: c.card,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: radius.card,
+      borderWidth: 1,
       borderColor: c.separator,
     },
     profileInfo: { flex: 1 },
-    profileName: { ...fonts.body, fontWeight: '700', color: c.text },
-    profileMeta: { ...fonts.footnote, color: c.textSecondary, marginTop: 2 },
+    profileName: { ...fonts.heading, color: c.heading },
+    profileMeta: { ...fonts.caption, color: c.textTertiary, marginTop: 2 },
     profileButton: {
-      width: 38,
-      height: 38,
-      borderRadius: radius.md,
-      backgroundColor: c.elevated,
+      width: TOUCH,
+      height: TOUCH,
+      borderRadius: radius.control,
+      backgroundColor: c.background,
+      borderWidth: 1,
+      borderColor: c.border,
       alignItems: 'center',
       justifyContent: 'center',
-      ...shadow.raised,
     },
+    // One quiet panel per subject, split by a rule rather than by nested boxes.
     card: {
       marginTop: spacing.lg,
       marginHorizontal: spacing.lg,
       padding: spacing.lg,
-      backgroundColor: c.card,
-      borderRadius: radius.xl,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.separator,
-      ...shadow.card,
+      backgroundColor: c.background,
+      borderRadius: radius.card,
+      borderWidth: 1,
+      borderColor: c.border,
     },
-    cardTitle: { ...fonts.footnote, color: c.textSecondary, textTransform: 'uppercase' },
+    cardTitle: { ...fonts.footnote, fontWeight: '600', color: c.heading },
+    // The guide gives charts their own tinted ground, so a plot reads as data
+    // rather than as another white panel.
+    chartCard: { backgroundColor: c.chartSurface, borderColor: c.separator },
     liveHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    liveDate: { ...fonts.footnote, color: c.textSecondary },
-    // Readout, trend dial and action column sit side by side, as in the design.
-    cardBody: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm },
+    liveDate: { ...fonts.caption, ...tabular, color: c.textTertiary },
+    // The reading and the dial that qualifies it sit side by side; everything
+    // else in the panel is below the rule.
+    cardBody: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, gap: spacing.sm },
     readout: { flexShrink: 1 },
-    // Takes the leftover width between the readout and the action column, so the
-    // trend dial centers in that gap instead of sitting flush against the buttons.
     trendSlot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    // The design frames the status and the value together, with the timestamp loose underneath.
-    valueBox: {
-      alignSelf: 'flex-start',
-      minWidth: 112,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      backgroundColor: c.elevated,
-      borderRadius: radius.lg,
-      ...shadow.raised,
-    },
-    valueRow: { flexDirection: 'row', alignItems: 'flex-end' },
-    value: { fontSize: 38, fontWeight: '700', lineHeight: 42 },
-    unit: { ...fonts.footnote, color: c.textSecondary, marginLeft: spacing.xs, marginBottom: 5 },
-    status: { ...fonts.footnote, fontWeight: '700' },
-    meta: { ...fonts.footnote, color: c.textSecondary, marginTop: spacing.sm },
-    notice: { ...fonts.footnote, color: c.green, marginTop: spacing.sm, fontWeight: '600' },
-    empty: { ...fonts.body, color: c.textSecondary },
-    actions: { width: EVENT_BUTTON * 2 + spacing.xs, gap: spacing.xs },
-    eventGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-    eventButton: {
-      width: EVENT_BUTTON,
-      height: EVENT_BUTTON,
-      backgroundColor: c.elevated,
-      borderRadius: radius.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...shadow.raised,
-    },
-    wideAction: {
+    badge: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: 4,
-      height: 30,
-      backgroundColor: c.elevated,
-      borderRadius: radius.md,
-      ...shadow.raised,
+      alignSelf: 'flex-start',
+      gap: spacing.xs,
+      paddingVertical: 3,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.pill,
     },
-    wideActionLabel: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+    badgeText: { ...fonts.caption, fontWeight: '700' },
+    valueRow: { flexDirection: 'row', alignItems: 'flex-end', marginTop: spacing.sm },
+    value: { ...fonts.readout, ...tabular, color: c.heading },
+    unit: { ...fonts.footnote, color: c.textTertiary, marginLeft: spacing.xs, marginBottom: 7 },
+    meta: { ...fonts.caption, ...tabular, color: c.textTertiary, marginTop: spacing.xs },
+    notice: { ...fonts.caption, color: c.green, marginTop: spacing.md, fontWeight: '600' },
+    empty: { ...fonts.body, color: c.textTertiary },
+    divider: { height: 1, backgroundColor: c.separator, marginTop: spacing.lg },
+    eventRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+    actionRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+    // Every control on the panel is the same stroked rectangle at the guide's
+    // minimum touch size, so the row reads as one set.
+    control: {
+      flex: 1,
+      height: TOUCH,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.control,
+      backgroundColor: c.background,
+    },
+    controlPressed: { backgroundColor: c.card },
+    wideAction: { flexDirection: 'row', gap: spacing.xs },
+    wideActionLabel: { ...fonts.footnote, fontWeight: '600', color: c.textSecondary },
   }),
 );

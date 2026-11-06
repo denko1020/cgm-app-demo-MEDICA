@@ -53,9 +53,9 @@ const useStyles = createStyles((c) =>
       alignItems: 'flex-end',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingTop: 40,
+      paddingTop: spacing.xxl,
       paddingBottom: spacing.md,
     },
-    title: { ...fonts.largeTitle, color: c.text },
+    title: { ...fonts.largeTitle, color: c.heading },
   }),
 );

@@ -141,9 +141,9 @@ export default function SettingsScreen() {
       <Section title={t.settings.emergencyContacts} footer={t.settings.emergencyFixed}>
         {s.emergencyContacts.map((c, i) => (
           <View key={i}>
-            <TextRow label={`${t.settings.contact} ${i + 1} — ${t.settings.contactName}`} value={c.name} onCommit={(name) => s.setEmergencyContact(i, { name })} />
+            <TextRow label={`${t.settings.contact} ${i + 1} ${t.settings.contactName.toLowerCase()}`} value={c.name} onCommit={(name) => s.setEmergencyContact(i, { name })} />
             <TextRow
-              label={`${t.settings.contact} ${i + 1} — ${t.settings.contactPhone}`}
+              label={`${t.settings.contact} ${i + 1} ${t.settings.contactPhone.toLowerCase()}`}
               value={c.phone}
               onCommit={(phone) => s.setEmergencyContact(i, { phone })}
               keyboardType="phone-pad"

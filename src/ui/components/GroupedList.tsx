@@ -2,19 +2,23 @@ import { Ionicons } from '@expo/vector-icons';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { createStyles, fonts, radius, shadow, spacing, useColors } from '../theme';
+import { TOUCH, createStyles, fonts, radius, spacing, tabular, useColors } from '../theme';
 
 interface SectionProps extends PropsWithChildren {
   title?: string;
   footer?: string;
 }
 
-/** iOS-style grouped list section: uppercase header, white card, hairline separators. */
+/**
+ * A section of the guide's quiet panel: a sentence-case heading, one surface
+ * with a 1px border, rows split by dividers. No shadow and no nesting — the
+ * guide separates by plane and rule instead.
+ */
 export function Section({ title, footer, children }: SectionProps) {
   const styles = useStyles();
   return (
     <View style={styles.section}>
-      {title ? <Text style={styles.sectionTitle}>{title.toUpperCase()}</Text> : null}
+      {title ? <Text style={styles.sectionTitle}>{title}</Text> : null}
       <View style={styles.card}>{children}</View>
       {footer ? <Text style={styles.sectionFooter}>{footer}</Text> : null}
     </View>
@@ -71,42 +75,42 @@ const useStyles = createStyles((c) =>
     section: { marginTop: spacing.xl },
     sectionTitle: {
       ...fonts.footnote,
-      color: c.textSecondary,
+      fontWeight: '600',
+      color: c.heading,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
     },
     sectionFooter: {
-      ...fonts.footnote,
-      color: c.textSecondary,
+      ...fonts.caption,
+      color: c.textTertiary,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
     },
     card: {
       marginHorizontal: spacing.lg,
-      backgroundColor: c.card,
-      borderRadius: radius.lg,
+      backgroundColor: c.background,
+      borderRadius: radius.card,
       overflow: 'hidden',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.separator,
-      ...shadow.card,
+      borderWidth: 1,
+      borderColor: c.border,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      minHeight: 48,
+      minHeight: TOUCH,
       paddingVertical: spacing.md,
       paddingLeft: spacing.lg,
       paddingRight: spacing.lg,
       marginLeft: 0,
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: 1,
       borderColor: c.separator,
     },
     rowLast: { borderBottomWidth: 0 },
     rowLabelWrap: { flex: 1 },
     rowLabel: { ...fonts.body, color: c.text },
-    rowSubtitle: { ...fonts.footnote, color: c.textSecondary, marginTop: 2 },
-    rowValue: { ...fonts.body, color: c.textSecondary, marginLeft: spacing.md },
-    pressed: { opacity: 0.6 },
+    rowSubtitle: { ...fonts.caption, color: c.textTertiary, marginTop: 2 },
+    rowValue: { ...fonts.body, ...tabular, color: c.textSecondary, marginLeft: spacing.md },
+    pressed: { backgroundColor: c.surfaceAlt },
     emptyText: { ...fonts.body, color: c.textTertiary },
   }),
 );

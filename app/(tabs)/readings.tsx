@@ -15,7 +15,7 @@ import { formatDateTime, trendArrow } from '@/core/util/format';
 import { Button } from '@/ui/components/Button';
 import { NoScrollEdgeEffect } from '@/ui/components/NoScrollEdgeEffect';
 import { EVENT_ICON, eventColors } from '@/ui/eventStyle';
-import { createStyles, fonts, radius, shadow, spacing, useColors } from '@/ui/theme';
+import { TOUCH, createStyles, fonts, radius, spacing, stroke, tabular, useColors } from '@/ui/theme';
 
 type Entry = { kind: 'reading'; ts: number; item: GlucoseReading } | { kind: 'event'; ts: number; item: AppEvent };
 
@@ -106,7 +106,7 @@ export default function ReadingsScreen() {
       <Ionicons
         name={item.uploaded ? 'cloud-done' : 'cloud-outline'}
         size={18}
-        color={item.uploaded ? c.green : c.textTertiary}
+        color={item.uploaded ? c.primary : c.orangeFill}
         style={{ marginLeft: spacing.sm }}
       />
     </View>
@@ -169,48 +169,68 @@ const useStyles = createStyles((c) =>
       alignItems: 'flex-end',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingTop: 40,
+      paddingTop: spacing.xxl,
       paddingBottom: spacing.md,
     },
-    title: { ...fonts.largeTitle, color: c.text },
+    title: { ...fonts.largeTitle, color: c.heading },
     actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
     list: {
       marginHorizontal: spacing.lg,
       marginTop: spacing.sm,
-      backgroundColor: c.card,
-      borderRadius: radius.lg,
+      backgroundColor: c.background,
+      borderRadius: radius.card,
       overflow: 'hidden',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.separator,
-      ...shadow.card,
+      borderWidth: 1,
+      borderColor: c.border,
     },
     listEmpty: { flexGrow: 1 },
-    row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 12, backgroundColor: c.card },
-    separator: { height: StyleSheet.hairlineWidth, backgroundColor: c.separator, marginLeft: spacing.lg },
-    badge: { backgroundColor: c.primarySoft, borderRadius: radius.sm, paddingHorizontal: 6, paddingVertical: 2, marginRight: spacing.md, minWidth: 44, alignItems: 'center' },
-    badgeBgm: { backgroundColor: c.greenSoft },
-    badgeText: { ...fonts.caption, fontWeight: '600', color: c.text },
-    time: { ...fonts.footnote, color: c.text },
-    raw: { ...fonts.caption, color: c.textTertiary },
-    eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: 8, backgroundColor: c.background },
+    row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, backgroundColor: c.background },
+    separator: { height: 1, backgroundColor: c.separator, marginLeft: spacing.lg },
+    // Source badge: a tinted ground with the matching ink, the guide's fixed
+    // pairing for a state that also has to work in print and in greyscale.
+    badge: {
+      backgroundColor: c.card,
+      borderRadius: radius.control,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      marginRight: spacing.md,
+      minWidth: 44,
+      alignItems: 'center',
+    },
+    badgeBgm: { backgroundColor: c.surfaceAlt },
+    badgeText: { ...fonts.caption, fontWeight: '700', color: c.textSecondary },
+    time: { ...fonts.footnote, ...tabular, color: c.text },
+    raw: { ...fonts.caption, ...tabular, color: c.textTertiary },
+    eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: c.card },
     eventText: { ...fonts.footnote, color: c.textSecondary, flex: 1 },
-    eventTime: { ...fonts.caption, color: c.textTertiary },
-    value: { ...fonts.body, fontWeight: '600', color: c.text },
-    unit: { ...fonts.caption, color: c.textSecondary, fontWeight: '400' },
+    eventTime: { ...fonts.caption, ...tabular, color: c.textTertiary },
+    value: { ...fonts.body, ...tabular, fontWeight: '700', color: c.heading },
+    unit: { ...fonts.caption, color: c.textTertiary, fontWeight: '400' },
     trend: { ...fonts.body, color: c.textSecondary, marginLeft: spacing.sm, width: 20, textAlign: 'center' },
     empty: { ...fonts.body, color: c.textTertiary, textAlign: 'center', marginTop: spacing.xl },
-    backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
-    dialog: { width: 300, backgroundColor: c.background, borderRadius: radius.xl, paddingVertical: spacing.lg, ...shadow.card },
-    dialogTitle: { ...fonts.body, fontWeight: '600', textAlign: 'center' },
+    backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
+    dialog: {
+      width: 320,
+      maxWidth: '100%',
+      backgroundColor: c.background,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.popup,
+      paddingVertical: spacing.xl,
+    },
+    dialogTitle: { ...fonts.heading, color: c.heading, textAlign: 'center' },
     dialogHint: { ...fonts.footnote, color: c.textSecondary, textAlign: 'center', marginTop: spacing.xs, paddingHorizontal: spacing.lg },
     input: {
       marginHorizontal: spacing.lg,
       marginTop: spacing.md,
-      borderWidth: 1,
-      borderColor: c.separator,
-      borderRadius: 8,
-      padding: 10,
-      fontSize: 20,
+      minHeight: TOUCH,
+      borderWidth: stroke.field,
+      borderColor: c.border,
+      borderRadius: radius.control,
+      paddingHorizontal: spacing.md,
+      ...fonts.title,
+      ...tabular,
+      color: c.heading,
       textAlign: 'center',
     },
     error: { ...fonts.footnote, color: c.red, textAlign: 'center', marginTop: spacing.sm },

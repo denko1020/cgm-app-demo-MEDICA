@@ -18,12 +18,16 @@ export const EVENT_ICON: Record<UserEventKind, IconName> = {
   medication: 'pill',
 };
 
-/** One colour per event kind, shared by the chart markers and the Readings list. */
+/**
+ * One colour per event kind, shared by the chart markers and the Readings list.
+ * These are marker fills, so they take the guide's status fills rather than the
+ * darker inks text has to use.
+ */
 export function eventColors(c: Colors): Record<UserEventKind, string> {
   return {
-    exercise: c.green,
-    meal: c.orange,
-    sleep: c.indigo,
-    medication: c.violet,
+    exercise: c.greenFill,
+    meal: c.orangeFill,
+    sleep: c.etcFill,
+    medication: c.primaryHover,
   };
 }

@@ -7,7 +7,7 @@ import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import type { ViewMode } from '@/core/types';
 
-import { createStyles, fonts, spacing, useColors } from '../theme';
+import { createStyles, fonts, radius, spacing, useColors } from '../theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -51,7 +51,7 @@ export function ViewModeControl() {
           const active = o.value === viewMode;
           return (
             <Pressable key={o.value} onPress={() => setViewMode(o.value)} style={[styles.chip, active && styles.chipActive]}>
-              <Ionicons name={ICONS[o.value]} size={12} color={active ? c.onAccent : c.textSecondary} />
+              <Ionicons name={ICONS[o.value]} size={13} color={active ? c.onAccent : c.primary} />
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{o.label}</Text>
             </Pressable>
           );
@@ -67,20 +67,20 @@ const useStyles = createStyles((c) =>
     track: {
       flexDirection: 'row',
       backgroundColor: c.card,
-      borderRadius: 15,
+      borderRadius: radius.pill,
       padding: 2,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: c.separator,
     },
     chip: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderRadius: 13,
-      paddingHorizontal: 6,
-      height: 26,
+      borderRadius: radius.pill,
+      paddingHorizontal: 7,
+      height: 28,
     },
     chipActive: { backgroundColor: c.primary },
-    chipText: { ...fonts.caption, fontWeight: '700', color: c.textSecondary, marginLeft: 4 },
+    chipText: { ...fonts.caption, fontWeight: '700', color: c.primary, marginLeft: 4 },
     chipTextActive: { color: c.onAccent },
   }),
 );

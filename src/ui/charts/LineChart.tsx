@@ -139,12 +139,12 @@ export function LineChart({
         )}
       </Defs>
       {band ? (
-        <Rect x={padL} y={y(band.to)} width={plotW} height={Math.max(0, y(band.from) - y(band.to))} fill={band.color ?? c.greenSoft} />
+        <Rect x={padL} y={y(band.to)} width={plotW} height={Math.max(0, y(band.from) - y(band.to))} fill={band.color ?? c.rangeBand} />
       ) : null}
       {areaBetween && series[areaBetween.a] && series[areaBetween.b] ? (
         <Path d={areaPath(series[areaBetween.a].values, series[areaBetween.b].values)} fill={areaBetween.color} fillOpacity={areaBetween.opacity ?? 0.6} />
       ) : null}
-      {zeroLine && lo <= 0 && hi >= 0 ? <Line x1={padL} y1={y(0)} x2={padL + plotW} y2={y(0)} stroke={c.textTertiary} strokeWidth={1} strokeDasharray="2 2" /> : null}
+      {zeroLine && lo <= 0 && hi >= 0 ? <Line x1={padL} y1={y(0)} x2={padL + plotW} y2={y(0)} stroke={c.gray} strokeWidth={1} strokeDasharray="2 2" /> : null}
       {yTicks.map((t) => (
         <SvgText key={t} x={padL - 4} y={y(t) + 4} fontSize={9} fill={c.textSecondary} textAnchor="end">
           {yTickFormat ? yTickFormat(t) : t}
@@ -185,12 +185,12 @@ export function LineChart({
         );
       })}
       {markers.map((m, i) => (
-        <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? c.orange} strokeWidth={1} strokeDasharray="3 2" />
+        <Line key={`m${i}`} x1={x(m.index)} y1={padT} x2={x(m.index)} y2={padT + plotH} stroke={m.color ?? c.orangeFill} strokeWidth={1} strokeDasharray="3 2" />
       ))}
       {markers
         .filter((m) => m.label)
         .map((m, i) => (
-          <SvgText key={`ml${i}`} x={Math.min(x(m.index) + 3, padL + plotW - 2)} y={padT + 9} fontSize={8} fill={m.color ?? c.orange} textAnchor="start">
+          <SvgText key={`ml${i}`} x={Math.min(x(m.index) + 3, padL + plotW - 2)} y={padT + 9} fontSize={8} fill={m.color ?? c.orangeFill} textAnchor="start">
             {m.label}
           </SvgText>
         ))}

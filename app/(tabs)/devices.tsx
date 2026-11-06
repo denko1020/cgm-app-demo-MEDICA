@@ -7,7 +7,7 @@ import { useStrings } from '@/core/i18n';
 import { useAppStore } from '@/core/store/appStore';
 import { EmptyRow, Row, Section } from '@/ui/components/GroupedList';
 import { Screen } from '@/ui/components/Screen';
-import { createStyles, radius, spacing, useColors } from '@/ui/theme';
+import { createStyles, fonts, radius, spacing, stroke, useColors } from '@/ui/theme';
 
 export default function DevicesScreen() {
   const t = useStrings();
@@ -77,7 +77,7 @@ export default function DevicesScreen() {
             <Row
               key={d.id}
               label={d.name}
-              subtitle={`${d.id}  ·  ${t.devices.signal} ${d.rssi} dBm`}
+              subtitle={`${d.id}, ${t.devices.signal} ${d.rssi} dBm`}
               last={i === unpaired.length - 1}
               right={
                 <Pressable onPress={() => void cgmController.connect(d.id)} style={styles.connectBtn}>
@@ -95,7 +95,14 @@ export default function DevicesScreen() {
 const useStyles = createStyles((c) =>
   StyleSheet.create({
     status: { flexDirection: 'row', alignItems: 'center', marginLeft: spacing.md },
-    connectBtn: { backgroundColor: c.primary, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radius.pill },
-    connectText: { color: c.onAccent, fontWeight: '600', fontSize: 13 },
+    connectBtn: {
+      minHeight: 36,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+      borderWidth: stroke.control,
+      borderColor: c.primary,
+      borderRadius: radius.control,
+    },
+    connectText: { ...fonts.footnote, color: c.primary, fontWeight: '600' },
   }),
 );
