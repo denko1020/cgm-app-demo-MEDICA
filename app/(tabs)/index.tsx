@@ -21,8 +21,15 @@ import { TOUCH, type Colors, createStyles, fonts, radius, spacing, tabular, topC
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-/** Width of the trend dial, and of the column reserved for it. */
+/** Width of the trend dial. */
 const DIAL = 72;
+
+/**
+ * Width of the column the dial sits in. Wider than the dial so it centres in
+ * the gap beside the reading rather than hugging the panel's right edge, and
+ * fixed so the dial does not move when the reading gains or loses a digit.
+ */
+const DIAL_SLOT = 160;
 
 /** Low <20%: red, 20-50%: orange, >=50%: the healthy blue the other indicators use. */
 function batteryColor(level: number, c: Colors): string {
@@ -297,7 +304,7 @@ const useStyles = createStyles((c) =>
     // own, so a two digit reading and a three digit one put the dial in exactly
     // the same place.
     readout: { flex: 1 },
-    trendSlot: { width: DIAL, alignItems: 'center', justifyContent: 'center' },
+    trendSlot: { width: DIAL_SLOT, alignItems: 'center', justifyContent: 'center' },
     badge: {
       flexDirection: 'row',
       alignItems: 'center',

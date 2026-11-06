@@ -32,8 +32,8 @@ const CHEVRON_STROKE = 8;
  * beyond them without pushing it off the box.
  */
 const ARCS = [
-  { w: 62, base: 44, apex: 33 },
-  { w: 43, base: 25, apex: 18 },
+  { w: 56, base: 44, apex: 33 },
+  { w: 38, base: 25, apex: 18 },
 ];
 
 /** One tip plus the arcs: how many bands stack on each side of the ring. */
@@ -184,7 +184,7 @@ export function TrendTile({ trend, size = 56 }: Props) {
       <Circle cx={CX} cy={CY + 2} r={R} stroke={shade(tint, -0.45)} strokeOpacity={0.22} strokeWidth={RING_STROKE} fill="none" />
       <Circle cx={CX} cy={CY} r={R} stroke={`url(#${uid}ring)`} strokeWidth={RING_STROKE} fill="none" />
       {angle === null ? (
-        [-22, 0, 22].map((dx) => <Circle key={dx} cx={CX + dx} cy={CY} r={8} fill={`url(#${uid}mark)`} />)
+        [-22, 0, 22].map((dx) => <Circle key={dx} cx={CX + dx} cy={CY} r={7} fill={`url(#${uid}mark)`} />)
       ) : (
         <Path d={NEEDLE} fill={`url(#${uid}mark)`} transform={`rotate(${angle} ${CX} ${CY})`} />
       )}
