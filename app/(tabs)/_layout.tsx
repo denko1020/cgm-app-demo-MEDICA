@@ -22,12 +22,12 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: c.primary,
-          tabBarInactiveTintColor: c.gray,
-          tabBarStyle: { backgroundColor: c.card, borderTopColor: c.separator },
-          tabBarActiveBackgroundColor: c.surfaceAlt,
-          tabBarInactiveBackgroundColor: c.surfaceAlt,
-          tabBarItemStyle: { marginHorizontal: 4, marginVertical: 6, borderRadius: radius.md },
+          tabBarActiveTintColor: c.primaryDeep,
+          tabBarInactiveTintColor: c.textTertiary,
+          tabBarStyle: { backgroundColor: c.background, borderTopWidth: 1, borderTopColor: c.separator },
+          tabBarActiveBackgroundColor: c.primarySoft,
+          tabBarInactiveBackgroundColor: c.background,
+          tabBarItemStyle: { marginHorizontal: 4, marginVertical: 6, borderRadius: radius.control },
         }}
       >
         <Tabs.Screen name="index" options={{ title: t.tabs.home, tabBarIcon: icon('pulse-outline') }} />

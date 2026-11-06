@@ -9,7 +9,7 @@ import { useAppStore } from '@/core/store/appStore';
 import { TIME_SCALES } from '@/core/types';
 import { formatTime } from '@/core/util/format';
 
-import { createStyles, fonts, spacing, useColors } from '../theme';
+import { createStyles, fonts, radius, spacing, tabular, topChips, useColors } from '../theme';
 
 /**
  * Global simulator speed toggle pinned to the top-right corner of the app.
@@ -36,7 +36,7 @@ export function SimSpeedControl() {
   const accelerated = timeScale > 1;
 
   return (
-    <View style={[styles.host, { top: insets.top + 6 }]} pointerEvents="box-none">
+    <View style={[styles.host, { top: insets.top + topChips.offset }]} pointerEvents="box-none">
       {open ? (
         <View style={styles.panel}>
           <Text style={styles.panelLabel}>{t.settings.timeScale}</Text>
@@ -91,35 +91,31 @@ const useStyles = createStyles((c) =>
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: c.card,
-      borderRadius: 13,
-      paddingHorizontal: 9,
-      height: 26,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: radius.pill,
+      paddingHorizontal: 10,
+      height: topChips.height,
+      borderWidth: 1,
       borderColor: c.separator,
     },
     chipActive: { backgroundColor: c.tint, borderColor: c.tint },
-    chipPaused: { backgroundColor: c.red, borderColor: c.red },
-    pauseChip: { paddingHorizontal: 7, marginRight: 4 },
-    chipText: { ...fonts.caption, fontWeight: '700', color: c.textSecondary, marginLeft: 4 },
+    chipPaused: { backgroundColor: c.redFill, borderColor: c.redFill },
+    pauseChip: { paddingHorizontal: 8, marginRight: 4 },
+    chipText: { ...fonts.caption, ...tabular, fontWeight: '700', color: c.primary, marginLeft: 4 },
     chipTextActive: { color: c.onAccent },
-    chipClock: { ...fonts.caption, color: '#CFE0FE', marginLeft: 6 },
+    chipClock: { ...fonts.caption, ...tabular, color: c.primarySoft, marginLeft: 6 },
     panel: {
       marginRight: spacing.sm,
-      backgroundColor: c.card,
-      borderRadius: 10,
+      backgroundColor: c.background,
+      borderRadius: radius.popup,
       padding: spacing.sm,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.separator,
-      shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
+      borderWidth: 1,
+      borderColor: c.border,
     },
-    panelLabel: { ...fonts.caption, color: c.textSecondary, marginBottom: 4 },
+    panelLabel: { ...fonts.caption, color: c.textTertiary, marginBottom: 4 },
     options: { flexDirection: 'row' },
-    option: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginRight: 2 },
+    option: { paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.control, marginRight: 2 },
     optionActive: { backgroundColor: c.tint },
-    optionText: { ...fonts.footnote, color: c.text },
+    optionText: { ...fonts.footnote, ...tabular, color: c.text },
     optionTextActive: { color: c.onAccent, fontWeight: '700' },
   }),
 );

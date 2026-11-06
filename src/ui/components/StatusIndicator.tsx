@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { createStyles, fonts, useColors } from '../theme';
+import { TOUCH, createStyles, fonts, useColors } from '../theme';
 
 interface StatusIndicatorProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -15,7 +15,7 @@ interface StatusIndicatorProps {
 export function StatusIndicator({ icon, label, active, activeColor }: StatusIndicatorProps) {
   const c = useColors();
   const styles = useStyles();
-  const color = active ? (activeColor ?? c.red) : c.textTertiary;
+  const color = active ? (activeColor ?? c.red) : c.gray;
   return (
     <View style={styles.wrap}>
       <View style={[styles.circle, { borderColor: color }]}>
@@ -29,7 +29,7 @@ export function StatusIndicator({ icon, label, active, activeColor }: StatusIndi
 const useStyles = createStyles((c) =>
   StyleSheet.create({
     wrap: { alignItems: 'center', width: 84 },
-    circle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
+    circle: { width: TOUCH, height: TOUCH, borderRadius: TOUCH / 2, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
     label: { ...fonts.caption, marginTop: 6, textAlign: 'center' },
   }),
 );

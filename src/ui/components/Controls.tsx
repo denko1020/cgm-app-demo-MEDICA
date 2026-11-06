@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Switch, Text, View, type SwitchProps } from 'react-native';
 
-import { createStyles, fonts, radius, spacing, useColors } from '../theme';
+import { TOUCH, createStyles, fonts, radius, spacing, tabular, useColors } from '../theme';
 
 interface AccentSwitchProps {
   value: boolean;
@@ -22,7 +22,7 @@ export function AccentSwitch({ value, onValueChange }: AccentSwitchProps) {
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: c.surfaceAlt, true: c.primary }}
+      trackColor={{ false: c.disabled, true: c.primary }}
       thumbColor="#FFFFFF"
       {...extra}
     />
@@ -35,6 +35,11 @@ interface SegmentedProps<T extends string | number> {
   onChange: (value: T) => void;
 }
 
+/**
+ * The guide's segmented control: a quiet track holding one white pill. The
+ * selection reads as a raised plane with blue text, not as a blue fill, which
+ * keeps the filled blue free for the screen's one primary action.
+ */
 export function Segmented<T extends string | number>({ options, value, onChange }: SegmentedProps<T>) {
   const styles = useStyles();
   return (
@@ -42,7 +47,13 @@ export function Segmented<T extends string | number>({ options, value, onChange 
       {options.map((o) => {
         const active = o.value === value;
         return (
-          <Pressable key={String(o.value)} onPress={() => onChange(o.value)} style={[styles.segment, active && styles.segmentActive]}>
+          <Pressable
+            key={String(o.value)}
+            onPress={() => onChange(o.value)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            style={[styles.segment, active && styles.segmentActive]}
+          >
             <Text style={[styles.segmentText, active && styles.segmentTextActive]} numberOfLines={1}>
               {o.label}
             </Text>
@@ -71,11 +82,11 @@ export function Stepper({ value, onChange, step = 1, min = -Infinity, max = Infi
     <View style={styles.stepper}>
       <Text style={styles.stepperValue}>{format ? format(value) : String(value)}</Text>
       <Pressable onPress={dec} style={styles.stepBtn} disabled={value <= min}>
-        <Ionicons name="remove-circle" size={22} color={value <= min ? c.textTertiary : c.primary} />
+        <Ionicons name="remove" size={20} color={value <= min ? c.gray : c.primary} />
       </Pressable>
       <View style={styles.stepDivider} />
       <Pressable onPress={inc} style={styles.stepBtn} disabled={value >= max}>
-        <Ionicons name="add-circle" size={22} color={value >= max ? c.textTertiary : c.primary} />
+        <Ionicons name="add" size={20} color={value >= max ? c.gray : c.primary} />
       </Pressable>
     </View>
   );
@@ -92,18 +103,29 @@ const useStyles = createStyles((c) =>
       flexWrap: 'wrap',
       justifyContent: 'flex-end',
       backgroundColor: c.surfaceAlt,
-      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.separator,
+      borderRadius: radius.pill,
       padding: 3,
-      gap: 4,
-      maxWidth: 220,
+      gap: 3,
+      maxWidth: 230,
     },
-    segment: { flexShrink: 0, paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, minWidth: 48, alignItems: 'center' },
-    segmentActive: { backgroundColor: c.primary },
-    segmentText: { ...fonts.footnote, color: c.textSecondary },
-    segmentTextActive: { color: c.onAccent, fontWeight: '700' },
+    segment: { flexShrink: 0, paddingVertical: 7, paddingHorizontal: 12, borderRadius: radius.pill, minWidth: 48, alignItems: 'center' },
+    segmentActive: { backgroundColor: c.background, borderWidth: 1, borderColor: c.border, paddingVertical: 6 },
+    segmentText: { ...fonts.caption, color: c.textTertiary },
+    segmentTextActive: { color: c.primary, fontWeight: '700' },
     stepper: { flexDirection: 'row', alignItems: 'center' },
-    stepperValue: { ...fonts.body, color: c.textSecondary, marginRight: spacing.md },
-    stepBtn: { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: c.surfaceAlt, borderRadius: radius.pill },
-    stepDivider: { width: 4 },
+    stepperValue: { ...fonts.body, ...tabular, color: c.text, marginRight: spacing.md },
+    stepBtn: {
+      width: TOUCH - 8,
+      height: TOUCH - 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.surfaceAlt,
+      borderWidth: 1,
+      borderColor: c.separator,
+      borderRadius: radius.control,
+    },
+    stepDivider: { width: spacing.xs },
   }),
 );

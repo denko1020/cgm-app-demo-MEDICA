@@ -8,6 +8,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>%WEB_TITLE%</title>
 
+    <!-- Pretendard is the OHC brand face (DESIGN.md 4). The variable build is one
+         file for every weight the type scale uses; src/ui/theme.ts names it first
+         and falls back through the platform Korean faces if it fails to load. -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+    />
+
     <!-- Home-screen install (PWA): Android/Chrome reads the manifest (display: fullscreen). -->
     <link rel="manifest" href="/cgm-app-demo-MEDICA/manifest.webmanifest" />
     <meta name="theme-color" content="#FFFFFF" />
@@ -38,6 +47,8 @@
       }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
+        font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+          "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
         overflow: hidden;
         overscroll-behavior: none;
         background-color: #ffffff;

@@ -1,88 +1,135 @@
+import { Platform } from 'react-native';
+
 import { useAppStore } from '@/core/store/appStore';
 
 /**
- * The reskin's light palette. `elevated` is the surface for a control that sits
- * on top of a card (the Home action buttons, the value box): in light it is the
- * page white, in dark it has to be *lighter* than the card, since a shadow
- * alone cannot separate two near-black surfaces.
+ * The OHC UI Design System palette (Rev.2026-10), as laid out in @design/DESIGN.md.
+ *
+ * Two rules shape the names below. Status colours come in pairs: the fill is
+ * what the guide defines for icons, markers and charts, and the `*Ink` value is
+ * the darkened variant the guide requires once the same meaning has to be
+ * carried by text (the fills run 1.9:1 to 3.0:1 on white). And neutrals are
+ * tinted towards the brand hue rather than warm, so the greys sit under the
+ * blue instead of fighting it.
  */
 export const lightColors = {
   background: '#FFFFFF',
-  card: '#F7F5F0',
-  surfaceAlt: '#EFEAE0',
+  /** surface-card: panels, chips, tiles. */
+  card: '#F3F3F5',
+  /** gray-100: the quiet track a segmented control or stepper sits in. */
+  surfaceAlt: '#F9F9F9',
+  /** surface-chart: charts and timelines. */
+  chartSurface: '#F8F9FD',
   elevated: '#FFFFFF',
-  separator: '#E8E2D8',
-  text: '#201F1C',
-  textSecondary: '#79746B',
-  textTertiary: '#B7B2A6',
+  /** border-subtle: dividers inside a panel. */
+  separator: '#E1E1E1',
+  /** border-default: the outline of a panel, field or popup. */
+  border: '#CDCDCD',
+  /** Titles and the logo. Body copy uses `text`. */
+  heading: '#000000',
+  text: '#333333',
+  textSecondary: '#454545',
+  /** muted: the lightest grey that still clears 4.5:1 on white and on a card. */
+  textTertiary: '#6B6B6B',
+  /** Disabled fills and non-text rules. Never put a label in this. */
+  gray: '#9A9A9A',
+  disabled: '#CDCDCD',
+
   tint: '#0064F0',
   primary: '#0064F0',
-  primarySoft: '#E1EBFE',
-  red: '#D0021B',
-  green: '#34C759',
-  gray: '#ACA79B',
-  orange: '#F59E0B',
-  greenSoft: '#DCFCE7',
-  indigo: '#6366F1',
-  violet: '#7C3AED',
-  /** Trend indicator: muted red rising, muted blue falling, grey steady — from the design. */
-  trendRise: '#C0504D',
-  trendFall: '#5B8DB8',
-  trendFlat: '#8A857C',
-  /** The faint chevrons the trend has not reached yet. */
-  trendIdle: '#CFCAC1',
+  /** Hover / secondary emphasis. */
+  primaryHover: '#3F8CF8',
+  /** The blue that stays legible on a light blue ground. */
+  primaryDeep: '#013ECC',
+  /** CARE LIGHT BLUE: tinted ground for a selected or informational panel. */
+  primarySoft: '#CEEAFE',
+
+  red: '#B42323',
+  green: '#2E5E1F',
+  orange: '#8A5A00',
+  redFill: '#FF5B5B',
+  greenFill: '#81B86E',
+  orangeFill: '#FFAA2A',
+  etcFill: '#8B55E9',
+  /** Badge grounds: the status fill at a tint the ink above it still clears. */
+  redSoft: '#FDECEC',
+  greenSoft: '#EAF2E6',
+  /** The target band behind the chart line: pale enough to stay behind it. */
+  rangeBand: '#EAF2E6',
+
   /** Live data, battery, link and upload indicators when they are healthy. */
   statusActive: '#0064F0',
-  /**
-   * Text and icons sitting on a filled accent (a primary or destructive button,
-   * the selected segment, an active chip). White clears the deep brand blue in
-   * light; on the lifted dark accent it only reaches 3.2:1, so dark mode puts
-   * near-black on the bright fill instead — the way the platform themes do.
-   */
+  /** Text and icons on a filled accent. */
   onAccent: '#FFFFFF',
+
+  /**
+   * Trend dial. Direction is already carried by the needle angle and the lit
+   * chevrons, so the colours stay inside the brand ramp instead of borrowing
+   * the red/green that mean out of range elsewhere on the screen.
+   */
+  trendRise: '#013ECC',
+  trendFall: '#3F8CF8',
+  trendFlat: '#454545',
+  /** The ring and the chevrons the trend has not reached yet. */
+  trendIdle: '#CDCDCD',
+
   /** Web only: the page behind the phone frame, and the frame's own edge. */
-  webBackdrop: '#ECE7DE',
-  webFrameBorder: '#DAD3C6',
+  webBackdrop: '#F3F3F5',
+  webFrameBorder: '#CDCDCD',
 };
 
 export type Colors = typeof lightColors;
 
 /**
- * The dark palette. Greys keep the light theme's warm cast (a touch of yellow)
- * rather than going neutral, so the two themes read as one design.
- *
- * Every hue is lifted, not just inverted: the brand blue #0064F0 reaches only
- * 3.7:1 on a near-black ground, so the accent becomes the same hue at a higher
- * lightness (hsl 215° 100% 62%). The light theme keeps the exact brand value.
- * `contrast-audit` covers the pairs that carry meaning here.
+ * The dark palette. The guide specifies a light theme only (DESIGN.md 13.6
+ * leaves dark mode open), so these values follow its own method rather than an
+ * invention: neutrals keep the brand hue with a trace of chroma, and every
+ * accent is the same hue lifted in lightness. Brand #0064F0 reaches only 3.7:1
+ * on a near-black ground, so the accent moves to #3D8EFF and the status inks
+ * swap places with their fills, which are the legible end here.
  */
 export const darkColors: Colors = {
-  background: '#141311',
-  card: '#1E1C19',
-  surfaceAlt: '#2A2724',
-  elevated: '#2E2B27',
-  separator: '#39342C',
-  text: '#F3F0E9',
-  textSecondary: '#A9A49A',
-  textTertiary: '#8E887E',
+  background: '#101217',
+  card: '#191C22',
+  surfaceAlt: '#1F232B',
+  chartSurface: '#161920',
+  elevated: '#232730',
+  separator: '#2C313B',
+  border: '#3A4150',
+  heading: '#FFFFFF',
+  text: '#E6E8EC',
+  textSecondary: '#B4B9C3',
+  textTertiary: '#8F96A3',
+  gray: '#6E7682',
+  disabled: '#3A4150',
+
   tint: '#3D8EFF',
   primary: '#3D8EFF',
+  primaryHover: '#6BA8FF',
+  primaryDeep: '#94C6FD',
   primarySoft: '#17233A',
-  red: '#FF6B6B',
-  green: '#3BD964',
-  gray: '#9A948A',
-  orange: '#FFB224',
-  greenSoft: '#14291B',
-  indigo: '#8B90F8',
-  violet: '#A78BFA',
-  trendRise: '#E08A86',
-  trendFall: '#7FB3DC',
-  trendFlat: '#A09A90',
-  trendIdle: '#3A3730',
+
+  red: '#FF8A8A',
+  green: '#A8D694',
+  orange: '#FFC768',
+  redFill: '#FF5B5B',
+  greenFill: '#81B86E',
+  orangeFill: '#FFAA2A',
+  etcFill: '#A77BF0',
+  redSoft: '#2C1A1C',
+  greenSoft: '#1B2A1C',
+  rangeBand: '#1B2A1C',
+
   statusActive: '#3D8EFF',
-  onAccent: '#10100E',
-  webBackdrop: '#0A0A09',
-  webFrameBorder: '#2A2724',
+  onAccent: '#0B0D11',
+
+  trendRise: '#94C6FD',
+  trendFall: '#3D8EFF',
+  trendFlat: '#B4B9C3',
+  trendIdle: '#3A4150',
+
+  webBackdrop: '#080A0D',
+  webFrameBorder: '#2C313B',
 };
 
 /** The palette for the theme the user has chosen. Re-renders on a theme switch. */
@@ -112,32 +159,50 @@ export function createStyles<T>(build: (c: Colors) => T): () => T {
   };
 }
 
-export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
+/** The guide's 4px step. Rhythm comes from varying which step a section uses. */
+export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 
-export const radius = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 };
+/** One radius per kind of thing, not a size ramp. */
+export const radius = { control: 4, popup: 8, card: 12, pill: 999 };
 
-export const shadow = {
-  card: {
-    shadowColor: '#3A3226',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  /** Tighter, more defined lift for the white controls that sit on a card. */
-  raised: {
-    shadowColor: '#3A3226',
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
-    shadowOffset: { width: 1, height: 2 },
-    elevation: 3,
-  },
-} as const;
+/** Button and field strokes, from the guide. */
+export const stroke = { control: 2, field: 1 };
+
+/** The smallest touch target the guide allows. */
+export const TOUCH = 44;
+
+/**
+ * The chips that float over the top of Home: how far below the safe area they
+ * start, and how tall they are. Home reads these to clear its own first row of
+ * them, so the gap holds if the chip ever changes size.
+ */
+export const topChips = { offset: 6, height: 28 };
+
+/**
+ * Pretendard is the brand face. The web build loads it from a CDN (see the
+ * stylesheet link in public/index.html) and falls back through the platform
+ * Korean faces; a native build has no font file bundled yet, so it stays on the
+ * system face rather than silently rendering a missing family.
+ */
+const family = Platform.select({
+  web: '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif',
+  default: undefined,
+});
+
+/** Figures that have to line up column to column, as the guide requires of every table and readout. */
+export const tabular = { fontVariant: ['tabular-nums' as const] };
 
 export const fonts = {
-  largeTitle: { fontSize: 34, fontWeight: '700' as const },
-  title: { fontSize: 22, fontWeight: '600' as const },
-  body: { fontSize: 17, fontWeight: '400' as const },
-  footnote: { fontSize: 13, fontWeight: '400' as const },
-  caption: { fontSize: 12, fontWeight: '400' as const },
+  /** h1 */
+  largeTitle: { fontFamily: family, fontSize: 32, lineHeight: 40, fontWeight: '700' as const },
+  /** h2 */
+  title: { fontFamily: family, fontSize: 24, lineHeight: 32, fontWeight: '700' as const },
+  /** h3 */
+  heading: { fontFamily: family, fontSize: 20, lineHeight: 28, fontWeight: '600' as const },
+  body: { fontFamily: family, fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
+  /** body-sm: tables, secondary descriptions. */
+  footnote: { fontFamily: family, fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
+  caption: { fontFamily: family, fontSize: 12, lineHeight: 16, fontWeight: '500' as const },
+  /** The one display size, for the reading the screen exists to show. */
+  readout: { fontFamily: family, fontSize: 44, lineHeight: 50, fontWeight: '800' as const },
 };

@@ -46,7 +46,7 @@ export function AnalyteChart({ width, readings, events, therapy, analyte, unit }
       .map((e) => {
         let index = tail.findIndex((r) => r.timestamp >= e.timestamp);
         if (index < 0) index = tail.length - 1;
-        if (isScenarioEvent(e)) return { index, color: c.orange, label: scenarioLabel(e.to, t) };
+        if (isScenarioEvent(e)) return { index, color: c.orangeFill, label: scenarioLabel(e.to, t) };
         return { index, color: eventColors(c)[e.kind], label: t.events[e.kind] };
       });
     return { tail, values, markers };
@@ -59,15 +59,15 @@ export function AnalyteChart({ width, readings, events, therapy, analyte, unit }
   const nearLowCutoff = spec.low * 1.05;
   const colorForValue =
     analyte === 'glucose'
-      ? (v: number) => (v < spec.low ? c.red : v < nearLowCutoff ? c.orange : c.primary)
-      : (v: number) => (v > spec.high ? c.red : c.primary);
+      ? (v: number) => (v < spec.low ? c.redFill : v < nearLowCutoff ? c.orangeFill : c.primary)
+      : (v: number) => (v > spec.high ? c.redFill : c.primary);
 
   return (
     <LineChart
       width={width}
       height={180}
       padLeft={PAD_L}
-      series={[{ values: data.values, color: c.primary, width: 3, smooth: true, areaFill: true, colorForValue }]}
+      series={[{ values: data.values, color: c.primary, width: 2, smooth: true, colorForValue }]}
       band={{ from: spec.low, to: spec.high }}
       yMin={spec.yMin}
       yMax={spec.yMax}

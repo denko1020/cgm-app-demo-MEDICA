@@ -3,7 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useStrings } from '@/core/i18n';
 
-import { createStyles, fonts, radius, shadow, spacing, useColors } from '../theme';
+import { TOUCH, createStyles, fonts, radius, spacing, stroke, useColors } from '../theme';
 
 type ConfirmFn = (title: string, message?: string, destructive?: boolean) => Promise<boolean>;
 
@@ -34,6 +34,8 @@ export function ConfirmProvider({ children }: PropsWithChildren) {
   };
 
   const value = useMemo(() => confirm, [confirm]);
+  // Red carries "this cannot be undone" here, the way the guide's danger popup does.
+  const accent = state?.destructive ? c.red : c.primary;
 
   return (
     <ConfirmContext.Provider value={value}>
@@ -44,14 +46,19 @@ export function ConfirmProvider({ children }: PropsWithChildren) {
             <Text style={styles.title}>{state?.title}</Text>
             {state?.message ? <Text style={styles.message}>{state.message}</Text> : null}
             <View style={styles.actions}>
-              <Pressable style={styles.action} onPress={() => finish(false)}>
-                <Text style={[styles.actionText, { color: c.primary }]}>{t.common.cancel}</Text>
+              <Pressable style={[styles.action, { borderColor: c.border }]} onPress={() => finish(false)}>
+                <Text style={[styles.actionText, { color: c.textSecondary }]}>{t.common.cancel}</Text>
               </Pressable>
-              <View style={styles.actionDivider} />
-              <Pressable style={styles.action} onPress={() => finish(true)}>
-                <Text style={[styles.actionText, { color: state?.destructive ? c.red : c.primary, fontWeight: '600' }]}>
-                  {t.common.yes}
-                </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.action,
+                  { borderColor: accent, backgroundColor: pressed ? accent : c.background },
+                ]}
+                onPress={() => finish(true)}
+              >
+                {({ pressed }) => (
+                  <Text style={[styles.actionText, { color: pressed ? c.onAccent : accent }]}>{t.common.yes}</Text>
+                )}
               </Pressable>
             </View>
           </View>
@@ -67,13 +74,29 @@ export function useConfirm(): ConfirmFn {
 
 const useStyles = createStyles((c) =>
   StyleSheet.create({
-    backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
-    box: { width: 280, backgroundColor: c.elevated, borderRadius: radius.xl, overflow: 'hidden', ...shadow.card },
-    title: { ...fonts.body, fontWeight: '600', textAlign: 'center', paddingTop: spacing.lg, paddingHorizontal: spacing.lg },
-    message: { ...fonts.footnote, color: c.textSecondary, textAlign: 'center', paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
-    actions: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderColor: c.separator, marginTop: spacing.lg },
-    action: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-    actionDivider: { width: StyleSheet.hairlineWidth, backgroundColor: c.separator },
-    actionText: { ...fonts.body },
+    backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
+    box: {
+      width: 320,
+      maxWidth: '100%',
+      backgroundColor: c.background,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.popup,
+      paddingTop: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xl,
+    },
+    title: { ...fonts.heading, color: c.heading, textAlign: 'center' },
+    message: { ...fonts.footnote, color: c.textSecondary, textAlign: 'center', paddingTop: spacing.sm },
+    actions: { flexDirection: 'row', gap: spacing.md, justifyContent: 'center', marginTop: spacing.xl },
+    action: {
+      flex: 1,
+      minHeight: TOUCH,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: stroke.control,
+      borderRadius: radius.control,
+    },
+    actionText: { ...fonts.body, fontWeight: '600' },
   }),
 );
